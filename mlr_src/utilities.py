@@ -109,3 +109,25 @@ def create_output_directory(args, dir_type='misc', return_date=False):
 	if return_date:
 		return output_dir, today, hour
 	return output_dir
+
+def calc_power_fdr(rejections, beta):
+	# Calculate which features are not null
+	nnulls = beta != 0
+	# number of disc/false discoveries
+	n_disc = np.sum(rejections)
+	n_false_disc = np.sum(rejections * (1 - nnulls))
+	# Power and fdr
+	power = (n_disc - n_false_disc) / max(1, nnulls.sum())
+	fdr = n_false_disc / max(1, n_disc)
+	return (power, fdr)
+
+
+def get_duplicate_columns(X):
+	""" Helper for working with real data """
+	n, p = X.shape
+	abscorr = np.abs(np.corrcoef(X.T))
+	for j in range(p):
+	    for i in range(j+1):
+	        abscorr[i, j] = 0
+	to_remove = np.where(abscorr > 1 - 1e-5)[0]
+	return to_remove

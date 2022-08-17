@@ -4,18 +4,22 @@ Template for running simulations.
 
 import os
 import sys
-import parser
+import time
 
 import numpy as np
 import pandas as pd
-import utilities
 from context import knockpy, mlr_src
+from mlr_src import parser, utilities
 
 # Specifies the type of simulation
 DIR_TYPE = os.path.split(os.path.abspath(__file__))[1].split(".py")[0]
 
-
-def single_seed_sim(seed, args):
+def single_seed_sim(
+	seed,
+	n,
+	p, 
+	args
+):
 	pass
 
 def main(args):
