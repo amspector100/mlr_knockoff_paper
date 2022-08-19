@@ -25,6 +25,7 @@ columns = [
 	"sparsity",
 	"coeff_size",
 	"seed",
+	"cond_mean",
 	"knockoff_type",
 	"fstat",
 	"q",
@@ -97,66 +98,83 @@ def single_seed_sim(
 				for coeff_size in args.get('coeff_size', [1]):
 					# options: gaussian, expo, probit, logistic
 					for y_dist in args.get("y_dist", ['gaussian']): 
-						# Sample beta
-						beta = gen_data.sample_beta(
-							p=p,
-							sparsity=sparse,
-							coeff_dist=coeff_dist,
-							coeff_size=coeff_size,
-						)
-						# Sample y
-						mu = np.dot(X, beta)
-						y = gen_data.sample_y(mu=mu, y_dist=y_dist)
-
-						# Assemble feature statistics
-						fstats = []
-						if args.get("compute_lcd", [True])[0]:
-							fstats.append(('lcd', 'lcd'))
-						if args.get('compute_lsm', [True])[0]:
-							fstats.append(('lsm', 'lsm'))
-						if args.get('compute_mlr', [True])[0]:
-							fstats.append(('mlr', 'mlr'))
-						if args.get("compute_bcd", [True])[0]:
-							fstats.append((mlr_src.bcd.BayesCoeffDiff(), 'bcd'))
-						if not args.get("mx", [True])[0]:
-							fstats.append((oracle.OracleFXStatistic(beta=beta), 'oracle'))
-
-						for fstat, fstatname in fstats:
-							# initialize KF
-							kf = KF(ksampler=ksampler, fstat=fstat)
-							fstat_kwargs = dict()
-							if fstat in ['mlr', 'bcd']:
-								fstat_kwargs['n_iter'] = args.get("n_iter", [2000])[0]
-								fstat_kwargs['chains'] = args.get("chains", [5])[0]
-							# Run KF
-							time0 = time.time()
-							kf.forward(
-								X=X, Xk=Xk, y=y, fstat_kwargs=fstat_kwargs, fdr=0.1,
+						for cond_mean in args.get("cond_mean", ['linear']):
+							# Sample beta
+							beta = gen_data.sample_beta(
+								p=p,
+								sparsity=sparse,
+								coeff_dist=coeff_dist,
+								coeff_size=coeff_size,
 							)
-							fstat_time = time.time() - time0
-							for q in args.get("q", [0.05, 0.10, 0.15, 0.20]):
-								T = kstats.data_dependent_threshhold(W=kf.W, fdr=q)
-								rej = (kf.W >= T).astype("float32")
-								power, fdp = utilities.calc_power_fdr(
-									rej,
-									beta,
-								)
+							# Sample y
+							if cond_mean == 'linear':
+								mu = np.dot(X, beta)
+							elif cond_mean == 'cos':
+								mu = np.dot(np.cos(X), beta)
+							else:
+								raise ValueError(f"unrecognized cond_mean={cond_mean}")
+							y = gen_data.sample_y(mu=mu, y_dist=y_dist)
 
-								# Add output
-								output.append([
-									n,
-									p,
-									sparse,
-									coeff_size,
-									seed,
-									S_method,
-									fstatname,
-									q,
-									power,
-									fdp,
-									fstat_time,
-									ko_time
-								])
+							# Assemble feature statistics
+							fstats = []
+							# oracle
+							if not args.get("mx", [True])[0]:
+								fstats.append((oracle.OracleFXStatistic(beta=beta), 'oracle'))
+							# Linear statistics
+							if args.get("compute_lcd", [True])[0]:
+								fstats.append(('lcd', 'lcd'))
+							if args.get('compute_lsm', [True])[0]:
+								fstats.append(('lsm', 'lsm'))
+							# MLR statistics + bayesian baseline
+							if args.get('compute_mlr', [True])[0]:
+								fstats.append(('mlr', 'mlr'))
+							if args.get("compute_mlr_spline", [False])[0]:
+								fstats.append(('mlr_spline', 'mlr_spline'))
+							if args.get("compute_bcd", [False])[0]:
+								fstats.append((mlr_src.bcd.BayesCoeffDiff(), 'bcd'))
+							# nonparametric statistics
+							if args.get("compute_deeppink", [False])[0]:
+								fstats.append(('deeppink', 'deeppink'))
+							if args.get("compute_randomforest", [False])[0]:
+								fstats.append(('randomforest', 'randomforest'))
+
+							for fstat, fstatname in fstats:
+								# initialize KF
+								kf = KF(ksampler=ksampler, fstat=fstat)
+								fstat_kwargs = dict()
+								if fstat in ['mlr', 'bcd']:
+									fstat_kwargs['n_iter'] = args.get("n_iter", [2000])[0]
+									fstat_kwargs['chains'] = args.get("chains", [5])[0]
+								# Run KF
+								time0 = time.time()
+								kf.forward(
+									X=X, Xk=Xk, y=y, fstat_kwargs=fstat_kwargs, fdr=0.1,
+								)
+								fstat_time = time.time() - time0
+								for q in args.get("q", [0.05, 0.10, 0.15, 0.20]):
+									T = kstats.data_dependent_threshhold(W=kf.W, fdr=q)
+									rej = (kf.W >= T).astype("float32")
+									power, fdp = utilities.calc_power_fdr(
+										rej,
+										beta,
+									)
+
+									# Add output
+									output.append([
+										n,
+										p,
+										sparse,
+										coeff_size,
+										cond_mean,
+										seed,
+										S_method,
+										fstatname,
+										q,
+										power,
+										fdp,
+										fstat_time,
+										ko_time
+									])
 	return output
 
 
@@ -185,7 +203,7 @@ def main(args):
 	# 	how_est_plugins = []
 
 	# keywords for the data-generating process for X
-	seed_start = args.get("seed_start", [1])[0]
+	seed_start = args.get("seed_start", [0])[0]
 	reps = args.get('reps', [1])[0] # number of replications
 	num_processes = args.get('num_processes', [1])[0]
 	ps = args.get('p', [300]) # dimensionality
