@@ -6,6 +6,9 @@ prof/*
 proftest/*
 profile
 
+# Moving things around
+transfer.sh
+
 # _____ R Defaults _______
 # History files
 .Rhistory

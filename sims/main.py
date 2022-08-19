@@ -127,6 +127,16 @@ def single_seed_sim(
 								mu = np.dot(X, beta)
 							elif cond_mean == 'cos':
 								mu = np.dot(np.cos(X), beta)
+							elif cond_mean == 'sin':
+								mu = np.dot(np.sin(X), beta)
+							elif cond_mean == 'cosh':
+								mu = np.dot(np.cosh(X), beta)
+							elif cond_mean == 'sinh':
+								mu = np.dot(np.sinh(X), beta)
+							elif cond_mean == 'quadratic':
+								mu = np.dot(X**2, beta)
+							elif cond_mean == 'cubic':
+								mu = np.dot(X**3, beta)
 							elif cond_mean == 'pairint':
 								nnull = np.where(beta != 0)[0]
 								nnull2 = nnull.copy()
