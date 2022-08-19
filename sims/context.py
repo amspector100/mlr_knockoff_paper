@@ -8,10 +8,12 @@ grandparent_dir = os.path.split(parent_directory)[0]
 # No need for this if knockpy is installed via pip
 kdev_path = os.path.split(grandparent_dir)[0] + '/knockpy-dev/knockpy/'
 sys.path.insert(0, kdev_path)
+kdev_path2 = grandparent_dir + '/knockpy/'
+sys.path.insert(0, kdev_path2)
 import knockpy
 # This is needed in general
 sys.path.insert(0, os.path.abspath(parent_directory))
 import mlr_src
 
 
-print(f"Using knockpy version {knockpy.__version__}")
+print(f"Using knockpy version {knockpy.__version__}.")
