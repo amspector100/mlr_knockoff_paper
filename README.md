@@ -8,4 +8,3 @@ The directory ``mlr_src`` contains extraneous functions used in the simulations.
 
 The directory ``sims`` contains the code which actually runs the simulations. It also contains .sh files which will replicate the exact simulation settings in the paper.
 
-Note that the simulations in this repository were also used in a presentation at MCP 2022, which also showcases results initially derived in Spector and Janson (2022).

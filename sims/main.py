@@ -32,8 +32,10 @@ columns = [
 	"p",
 	"sparsity",
 	"coeff_size",
+	"coeff_dist",
 	"seed",
 	"cond_mean",
+	"y_dist",
 	"mx",
 	"knockoff_type",
 	"fstat",
@@ -54,6 +56,7 @@ def single_seed_sim(
 	args
 ):
 	print(f"At seed={seed}, n={n}, p={p}.")
+	sys.stdout.flush()
 
 	# 1. Create data-generating process for X
 	output = []
@@ -101,6 +104,7 @@ def single_seed_sim(
 		Xk = ksampler.sample_knockoffs()
 		ko_time = np.around(time.time() - time0, 2)
 		print(f"Finished sampling {S_method} knockoffs for seed={seed}, took {ko_time} at {elapsed(t0)}.")
+		sys.stdout.flush()
 
 		# 3. Generate y
 		for sparse in args.get('sparsity', [0.1]):
@@ -121,6 +125,13 @@ def single_seed_sim(
 								mu = np.dot(X, beta)
 							elif cond_mean == 'cos':
 								mu = np.dot(np.cos(X), beta)
+							elif cond_mean == 'pairint':
+								nnull = np.where(beta != 0)[0]
+								nnull2 = nnull.copy()
+								np.random.shuffle(nnull2)
+								mu = np.dot(X[:, nnull] * X[:, nnull2], beta[nnull])
+							elif cond_mean == 'trunclin':
+								mu = np.dot((X > 0).astype(float), beta)
 							else:
 								raise ValueError(f"unrecognized cond_mean={cond_mean}")
 							y = gen_data.sample_y(mu=mu, y_dist=y_dist)
@@ -175,8 +186,10 @@ def single_seed_sim(
 										p,
 										sparse,
 										coeff_size,
-										cond_mean,
+										coeff_dist,
 										seed,
+										cond_mean,
+										y_dist,
 										mx,
 										S_method,
 										fstatname,
@@ -253,7 +266,8 @@ def main(args):
 					output_df = pd.DataFrame(all_outputs, columns=columns)
 					output_df.to_csv(output_path, index=False)
 					summary = output_df.groupby(
-						['mx', 'knockoff_type', 'fstat', 'n', 'p', 'sparsity', 'coeff_size', 'q'] # 'lambd' for plug-in ests
+						['mx', 'knockoff_type', 'n', 'p', 'cond_mean',
+						 'sparsity', 'coeff_size', 'q', 'fstat'] # 'lambd' for plug-in ests
 					)[[
 						'power', 'fdp', 'fstat_time', 'ko_time',
 					]].agg(
