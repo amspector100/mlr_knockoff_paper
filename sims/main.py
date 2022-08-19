@@ -30,6 +30,7 @@ DIR_TYPE = os.path.split(os.path.abspath(__file__))[1].split(".py")[0]
 columns = [
 	"n",
 	"p",
+	"covmethod",
 	"sparsity",
 	"coeff_size",
 	"coeff_dist",
@@ -67,13 +68,14 @@ def single_seed_sim(
 		sample_kwargs = {}
 		if covmethod in ['ver', 'ar1']:
 			sample_kwargs['max_corr'] = max_corr
+		if covmethod == 'ar1':
+			sample_kwargs['a'] = args.get("a", [5])[0]
+			sample_kwargs['b'] = args.get("b", [1])[0]
 		dgprocess.sample_data(
 			n=n,
 			p=p,
 			method=covmethod,
 			**sample_kwargs,
-			a=args.get("a", [5])[0],
-			b=args.get("b", [1])[0],
 		)
 		X = dgprocess.X
 		Sigma = dgprocess.Sigma
@@ -184,6 +186,7 @@ def single_seed_sim(
 									output.append([
 										n,
 										p,
+										covmethod,
 										sparse,
 										coeff_size,
 										coeff_dist,
@@ -266,7 +269,7 @@ def main(args):
 					output_df = pd.DataFrame(all_outputs, columns=columns)
 					output_df.to_csv(output_path, index=False)
 					summary = output_df.groupby(
-						['mx', 'knockoff_type', 'n', 'p', 'cond_mean',
+						['mx', 'knockoff_type', 'n', 'p', 'covmethod', 'cond_mean',
 						 'sparsity', 'coeff_size', 'q', 'fstat'] # 'lambd' for plug-in ests
 					)[[
 						'power', 'fdp', 'fstat_time', 'ko_time',

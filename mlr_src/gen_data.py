@@ -1,4 +1,5 @@
 import numpy as np
+from scipy import stats
 
 def gen_ark_X(n, p, k=2, max_corr=0.99, alpha0=0.2, alphasum=1.0):
 	"""
