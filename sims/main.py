@@ -34,6 +34,7 @@ columns = [
 	"coeff_size",
 	"seed",
 	"cond_mean",
+	"mx",
 	"knockoff_type",
 	"fstat",
 	"q",
@@ -48,6 +49,7 @@ def single_seed_sim(
 	n,
 	p,
 	covmethod,
+	mx,
 	t0,
 	args
 ):
@@ -87,7 +89,7 @@ def single_seed_sim(
 	S_methods = args.get("s_method", ['mvr', 'sdp'])
 	for S_method in S_methods:
 		time0 = time.time()
-		if args.get("mx", [True])[0]:
+		if mx:
 			ksampler = knockoffs.GaussianSampler(
 				X=X, Sigma=Sigma, method=S_method
 			)
@@ -126,7 +128,7 @@ def single_seed_sim(
 							# Assemble feature statistics
 							fstats = []
 							# oracle
-							if not args.get("mx", [True])[0]:
+							if not mx:
 								fstats.append((oracle.OracleFXStatistic(beta=beta), 'oracle'))
 							# Linear statistics
 							if args.get("compute_lcd", [True])[0]:
@@ -175,6 +177,7 @@ def single_seed_sim(
 										coeff_size,
 										cond_mean,
 										seed,
+										mx,
 										S_method,
 										fstatname,
 										q,
@@ -229,37 +232,38 @@ def main(args):
 		for kappa in kappas:
 			n = int(p * kappa)
 			for covmethod in covmethods:
-				outputs = utilities.apply_pool(
-					func=single_seed_sim,
-					seed=list(range(seed_start+1, seed_start+reps+1)), 
-					constant_inputs={
-						'n':n,
-						'p':p,
-						'covmethod':covmethod,
-						't0':t0,
-						'args':args,
-					},
-					num_processes=num_processes, 
-				)
-				for output in outputs:
-					all_outputs.extend(output)
+				for mx in args.get("mx", [True]):
+					outputs = utilities.apply_pool(
+						func=single_seed_sim,
+						seed=list(range(seed_start+1, seed_start+reps+1)), 
+						constant_inputs={
+							'n':n,
+							'p':p,
+							'covmethod':covmethod,
+							'mx':mx,
+							't0':t0,
+							'args':args,
+						},
+						num_processes=num_processes, 
+					)
+					for output in outputs:
+						all_outputs.extend(output)
 
-				# Turn into pandas dataframe
-				output_df = pd.DataFrame(all_outputs, columns=columns)
-				output_df.to_csv(output_path, index=False)
-				summary = output_df.groupby(
-					['knockoff_type', 'fstat', 'n', 'p', 'sparsity', 'coeff_size', 'q'] # 'lambd' for plug-in ests
-				)[[
-					'power', 'fdp', 'fstat_time', 'ko_time',
-				]].agg(
-					["mean", "std"]
-				).reset_index()
-				summary.to_csv(summary_path, index=False)
-				pd.set_option('display.max_rows', 500)
-				#pd.set_option('display.max_columns', 10)
-				print(summary)
-				pd.reset_option('display.max_rows|display.max_columns|display.width')
-
+					# Turn into pandas dataframe
+					output_df = pd.DataFrame(all_outputs, columns=columns)
+					output_df.to_csv(output_path, index=False)
+					summary = output_df.groupby(
+						['mx', 'knockoff_type', 'fstat', 'n', 'p', 'sparsity', 'coeff_size', 'q'] # 'lambd' for plug-in ests
+					)[[
+						'power', 'fdp', 'fstat_time', 'ko_time',
+					]].agg(
+						["mean", "std"]
+					).reset_index()
+					summary.to_csv(summary_path, index=False)
+					pd.set_option('display.max_rows', 500)
+					#pd.set_option('display.max_columns', 10)
+					print(summary)
+					pd.reset_option('display.max_rows|display.max_columns|display.width')
 
 
 
