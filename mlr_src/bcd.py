@@ -3,7 +3,6 @@ Implementation of a bayesian coefficient difference.
 """
 import numpy as np
 import knockpy
-import pyblip
 from knockpy import knockoff_stats as kstats
 
 class BayesCoeffDiff(kstats.FeatureStatistic):
@@ -36,6 +35,7 @@ class BayesCoeffDiff(kstats.FeatureStatistic):
 			self.kwargs[key] = kwargs[key]
 
 		# Fit model
+		import pyblip
 		y_dist = kstats.parse_y_dist(y)
 		if y_dist == 'gaussian':
 			lm = pyblip.linear.LinearSpikeSlab(
