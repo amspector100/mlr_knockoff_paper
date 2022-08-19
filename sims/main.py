@@ -9,11 +9,19 @@ import time
 import numpy as np
 import pandas as pd
 from context import knockpy, mlr_src
-from mlr_src import bcd, gen_data, oracle, parser, utilities
+from mlr_src import gen_data, oracle, parser, utilities
 from mlr_src.utilities import elapsed
 from knockpy import knockoffs
 from knockpy.knockoff_filter import KnockoffFilter as KF
 from knockpy import knockoff_stats as kstats
+
+# bayes coeff diff, requires pyblip
+try:
+	from mlr_src import bcd
+	bcd_available = True
+except ImportError as e:
+	bcd_available = False
+	warnings.warn(f"Cannot import bcd, raised error {e}")
 
 # Specifies the type of simulation
 DIR_TYPE = os.path.split(os.path.abspath(__file__))[1].split(".py")[0]
