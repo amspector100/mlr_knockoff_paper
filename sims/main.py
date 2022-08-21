@@ -179,6 +179,11 @@ def single_seed_sim(
 								if fstat in ['mlr', 'bcd']:
 									fstat_kwargs['n_iter'] = args.get("n_iter", [2000])[0]
 									fstat_kwargs['chains'] = args.get("chains", [5])[0]
+
+								# Quick kwarg to only run oracle statistic
+								if args.get("oracle_only", [False])[0] and fstatname != 'oracle':
+									continue
+
 								# Run KF
 								time0 = time.time()
 								if fstatname != 'oracle' or not mx: 
@@ -228,23 +233,6 @@ def main(args):
 	# Parse and extract arguments
 	t0 = time.time()
 	args = parser.parse_args(sys.argv)
-
-	# # 2. how to compute knockoffs 
-	# q = args.get("q", [0.05])[0]
-	# mx = args.get("mx", [False])[0]
-	# S_methods = args.get("s_method", ['mvr', 'sdp'])
-	# # 3. feature statistics
-	# lambd_scalings = args.get('lambd', [64])
-	# compute_mlr_fx = args.get("compute_mlr_fx", [True])[0]
-	# compute_mlr_mx = args.get("compute_mlr_mx", [True])[0]
-	# compute_bayes_baseline = args.get('compute_bayes_baseline', [True])[0]
-	# compute_lcd = args.get("compute_lcd", [True])[0]
-	# compute_lsm = args.get("compute_lsm", [True])[0]
-	# n_iter = args.get("n_iter", [5000])[0]
-	# chains = args.get("chains", [3])[0]
-	# how_est_plugins = args.get("how_est", [''])#["xi", "gd_cvx", "gd_noncvx", "em"])
-	# if len(how_est_plugins) == 1 and how_est_plugins[0] == '':
-	# 	how_est_plugins = []
 
 	# keywords for the data-generating process for X
 	seed_start = args.get("seed_start", [0])[0]
