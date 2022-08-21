@@ -124,28 +124,25 @@ def single_seed_sim(
 							)
 							# Sample y
 							if cond_mean == 'linear':
-								mu = np.dot(X, beta)
+								fX, fXk = X, Xk
 							elif cond_mean == 'cos':
-								mu = np.dot(np.cos(X), beta)
+								fX, fXk = np.cos(X), np.cos(Xk)
 							elif cond_mean == 'sin':
-								mu = np.dot(np.sin(X), beta)
+								fX, fXk = np.sin(X), np.sin(Xk)
 							elif cond_mean == 'cosh':
-								mu = np.dot(np.cosh(X), beta)
+								fX, fXk = np.cosh(X), np.cosh(Xk)
 							elif cond_mean == 'sinh':
-								mu = np.dot(np.sinh(X), beta)
+								fX, fXk = np.sinh(X), np.sinh(Xk)
 							elif cond_mean == 'quadratic':
-								mu = np.dot(X**2, beta)
+								fX, fXk = X**2, Xk**2
 							elif cond_mean == 'cubic':
-								mu = np.dot(X**3, beta)
-							elif cond_mean == 'pairint':
-								nnull = np.where(beta != 0)[0]
-								nnull2 = nnull.copy()
-								np.random.shuffle(nnull2)
-								mu = np.dot(X[:, nnull] * X[:, nnull2], beta[nnull])
+								fX, fXk = X**3, Xk**3
 							elif cond_mean == 'trunclin':
-								mu = np.dot((X > 0).astype(float), beta)
+								fX = (X > 0).astype(float)
+								fXk = (Xk > 0).astype(float)
 							else:
 								raise ValueError(f"unrecognized cond_mean={cond_mean}")
+							mu = np.dot(fX, beta)
 							y = gen_data.sample_y(mu=mu, y_dist=y_dist)
 
 							# Assemble feature statistics
@@ -153,6 +150,10 @@ def single_seed_sim(
 							# oracle
 							if not mx:
 								fstats.append((oracle.OracleFXStatistic(beta=beta), 'oracle'))
+							else:
+								fstats.append(
+									(knockpy.mlr.OracleMLR(beta=beta, sigma2=1.0), 'oracle')
+								)
 							# Linear statistics
 							if args.get("compute_lcd", [True])[0]:
 								fstats.append(('lcd', 'lcd'))
@@ -180,9 +181,15 @@ def single_seed_sim(
 									fstat_kwargs['chains'] = args.get("chains", [5])[0]
 								# Run KF
 								time0 = time.time()
-								kf.forward(
-									X=X, Xk=Xk, y=y, fstat_kwargs=fstat_kwargs, fdr=0.1,
-								)
+								if fstatname != 'oracle' or not mx: 
+									kf.forward(
+										X=X, Xk=Xk, y=y, fstat_kwargs=fstat_kwargs, fdr=0.1,
+									)
+								else:
+									# oracle statistics get to know what y is a linear response to
+									kf.forward(
+										X=fX, Xk=fXk, y=y, fstat_kwargs=fstat_kwargs, fdr=0.1
+									)
 								fstat_time = time.time() - time0
 								for q in args.get("q", [0.05, 0.10, 0.15, 0.20]):
 									T = kstats.data_dependent_threshhold(W=kf.W, fdr=q)

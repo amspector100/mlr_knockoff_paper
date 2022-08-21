@@ -48,6 +48,8 @@ def sample_beta(p, sparsity, coeff_size, coeff_dist):
 		nnull_vals = np.random.uniform(low=coeff_size/2, high=coeff_size, size=nnn)
 	elif coeff_dist == 'expo':
 		nnull_vals = np.sqrt(coeff_size) * stats.expon.rvs(size=nnn)
+	elif coeff_dist == 't':
+		nnull_vals = np.sqrt(coeff_size) * stats.t.rvs(size=nnn, df=3)
 	elif coeff_dist == 'mixture':
 		# large mixture
 		nnull_vals = np.sqrt(coeff_size) * np.random.randn(nnn)
