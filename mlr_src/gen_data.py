@@ -70,6 +70,9 @@ def sample_y(mu, y_dist):
 	elif y_dist == 'probit':
 		y = mu + np.random.randn(n)
 		y = (y < 0).astype(int)
+	elif y_dist == 'binomial' or y_dist == 'logistic':
+		probs = np.exp(mu) / (1.0 + np.exp(mu))
+		y = np.random.binomial(1, probs).astype(int)
 	elif y_dist == 'cauchy':
 		y = mu + stats.cauchy.rvs(size=n)
 		y = y / y.std()

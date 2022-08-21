@@ -152,7 +152,7 @@ def single_seed_sim(
 								fstats.append((oracle.OracleFXStatistic(beta=beta), 'oracle'))
 							else:
 								fstats.append(
-									(knockpy.mlr.OracleMLR(beta=beta, sigma2=1.0), 'oracle')
+									(knockpy.mlr.OracleMLR(beta=beta,), 'oracle')
 								)
 							# Linear statistics
 							if args.get("compute_lcd", [True])[0]:
@@ -176,7 +176,7 @@ def single_seed_sim(
 								# initialize KF
 								kf = KF(ksampler=ksampler, fstat=fstat)
 								fstat_kwargs = dict()
-								if fstat in ['mlr', 'bcd']:
+								if fstat in ['mlr', 'bcd'] or (fstat == 'oracle' and mx):
 									fstat_kwargs['n_iter'] = args.get("n_iter", [2000])[0]
 									fstat_kwargs['chains'] = args.get("chains", [5])[0]
 
@@ -195,6 +195,8 @@ def single_seed_sim(
 									kf.forward(
 										X=fX, Xk=fXk, y=y, fstat_kwargs=fstat_kwargs, fdr=0.1
 									)
+									#print(np.around(kf.W[beta == 0], 3))
+									#print(np.around(kf.W[beta != 0], 3))
 								fstat_time = time.time() - time0
 								for q in args.get("q", [0.05, 0.10, 0.15, 0.20]):
 									T = kstats.data_dependent_threshhold(W=kf.W, fdr=q)
