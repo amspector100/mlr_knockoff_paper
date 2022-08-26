@@ -35,11 +35,15 @@ def gen_ark_X(n, p, k=2, max_corr=0.99, alpha0=0.2, alphasum=1.0):
 	V = np.dot(etas, etas.T)
 	return Z, V
 
-def sample_beta(p, sparsity, coeff_size, coeff_dist):
+def sample_beta(p, sparsity, coeff_size, coeff_dist, corr_signals=False):
 	nnn = int(np.ceil(sparsity * p))
-	nnull_inds = np.random.choice(
-		np.arange(p), nnn, replace=False
-	)
+	if corr_signals:
+		first_nn = np.random.choice(np.arange(p-nnn+1))
+		nnull_inds = np.arange(first_nn, first_nn+nnn)
+	else:
+		nnull_inds = np.random.choice(
+			np.arange(p), nnn, replace=False
+		)
 	beta = np.zeros(p)
 	signs = 2 * np.random.binomial(1, 0.5, size=nnn) - 1
 	if coeff_dist == 'normal':

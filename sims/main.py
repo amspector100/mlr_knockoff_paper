@@ -71,6 +71,11 @@ def single_seed_sim(
 		if covmethod == 'ar1':
 			sample_kwargs['a'] = args.get("a", [5])[0]
 			sample_kwargs['b'] = args.get("b", [1])[0]
+		if covmethod == 'blockequi':
+			sample_kwargs['rho'] = args.get("rho", [0.5])[0]
+			sample_kwargs['gamma'] = args.get("gamma", [0])[0]
+		if covmethod == 'ver':
+			sample_kwargs['delta'] = args.get("delta", [0.2])[0]
 		dgprocess.sample_data(
 			n=n,
 			p=p,
@@ -121,6 +126,7 @@ def single_seed_sim(
 								sparsity=sparse,
 								coeff_dist=coeff_dist,
 								coeff_size=coeff_size,
+								corr_signals=args.get("corr_signals", [False])[0]
 							)
 							# Sample y
 							if cond_mean == 'linear':
