@@ -95,14 +95,14 @@ def download_stock(stock, prefix=''):
 def download_sp_stock(stock):
 	download_stock(stock, prefix='sp_')
 
-def get_sp_data():
+def get_sp_data(download=False):
 	"""
 	Adapted from: https://github.com/CNuge/kaggle-code
 	"""
 	sp_stocks = ['MMM', 'ABT', 'ABBV', 'ABMD', 'ACN', 'ATVI', 'ADBE', 'AMD', 'AAP', 'AES', 'AFL', 'A', 'APD', 'AKAM', 'ALK', 'ALB', 
 		   'ARE', 'ALGN', 'ALLE', 'LNT', 'ALL', 'GOOGL', 'GOOG', 'MO', 'AMZN', 'AMCR', 'AEE', 'AAL', 'AEP', 'AXP', 'AIG', 'AMT',
 		   'AWK', 'AMP', 'ABC', 'AME', 'AMGN', 'APH', 'ADI', 'ANSS', 'ANTM', 'AON', 'AOS', 'APA', 'AAPL', 'AMAT', 'APTV', 'ADM',
-		   'ANET', 'AJG', 'AIZ', 'T', 'ATO', 'ADSK', 'ADP', 'AZO', 'AVB', 'AVY', 'BKR', 'BLL', 'BAC', 'BBWI', 'BAX', 'BDX', 'BRK.B',
+		   'ANET', 'AJG', 'AIZ', 'T', 'ATO', 'ADSK', 'ADP', 'AZO', 'AVB', 'AVY', 'BKR', 'BAC', 'BBWI', 'BAX', 'BDX',
 		   'BBY', 'BIO', 'TECH', 'BIIB', 'BLK', 'BK', 'BA', 'BKNG', 'BWA', 'BXP', 'BSX', 'BMY', 'AVGO', 'BR', 'BRO', 'BF.B', 'CHRW',
 		   'CDNS', 'CZR', 'CPB', 'COF', 'CAH', 'KMX', 'CCL', 'CARR', 'CTLT', 'CAT', 'CBOE', 'CBRE', 'CDW', 'CE', 'CNC', 'CNP', 'CDAY',
 		   'CERN', 'CF', 'CRL', 'SCHW', 'CHTR', 'CVX', 'CMG', 'CB', 'CHD', 'CI', 'CINF', 'CTAS', 'CSCO', 'C', 'CFG', 'CTXS', 'CLX',
@@ -142,7 +142,11 @@ def get_sp_data():
 			data = pd.read_csv(f"fund_replication/sp_{stock}.csv")
 			all_data.append(data)
 		except FileNotFoundError:
-			pass #print(f"Failed to find stock={stock}")
+			if download:
+				print(f"Failed to find stock={stock}, downloading!")
+				download_sp_stock(stock)
+				data = pd.read_csv(f"fund_replication/sp_{stock}.csv")
+				all_data.append(data)
 
 	all_data = pd.concat(all_data, axis='index')
 	all_data.to_csv("fund_replication/all_sp_stocks.csv")
@@ -158,7 +162,7 @@ def main(args):
 	# Possibly pull the s&p data
 	xfile = "fund_replication/all_sp_stocks.csv"
 	if not os.path.exists(xfile):
-		get_sp_data()
+		get_sp_data() # by default works with exactly the same stocks we used
 
 	# Load sector data
 	sector_data = pd.read_csv("fund_replication/all_sp_sectors.csv").reset_index()	
