@@ -193,8 +193,6 @@ def main(args):
 				)
 				W_out_df.to_csv(w_outfile, index=False)
 				T_out_df.to_csv(t_outfile, index=False)
-				print(T_out_df)
-				print(W_out_df)
 
 				# Print cumsums so far
 				out_df = pd.DataFrame(output, columns=COLUMNS)
