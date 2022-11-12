@@ -11,3 +11,18 @@ The directory ``sims`` contains the code which actually runs the simulations. It
 The code needed to replicate the three real data applications are in the ``real_data/`` subdirectory. 
 
 In general, all ``.py`` and ``.sh`` files should be called from the directory in which they reside. For example, one should navigate to the ``real_data/`` subdirectory before running ``python3.9 hiv_data.py`` to replicate the HIV data analysis.
+
+## Figure by figure
+
+1. Figure 1: see ``final-plots/final_plots.ipynb``.
+2. Figure 2: generated using ``sims/all_sims.sh`` using ``LINEAR_FX_ARGS`` and ``LINEAR_MX_ARGS``.
+3. Figure 3: generated using ``sims/all_sims.sh`` using ``VP_ARGS``.
+4. Figure 4: generated using ``sims/all_sims.sh`` using ``SPARSE_ARGS``.
+5. Figure 5: see ``final-plots/final_plots.ipynb``.
+6. Figure 6: generated using ``sims/all_sims.sh`` using ``NONLIN_ARGS``.
+7. Figure 7: generated using ``sims/all_sims.sh`` using ``LOGISTIC_ARGS``.
+8. Figure 8: generated from ``real_data/hiv_data.py``.
+9. Figure 9: generated from ``real_data/fund_rep.py``.
+10. Figure 10: generated from ``real_data/nodewise_knock.py``.
+11. Figure 11: generated using ``sims/all_sims.sh`` using ``NONLIN_ARGS``.
+12. Figures 12-15: generated using ``real_data/hiv_data.py`` and ``final-plots/final_plots.ipynb``. 
