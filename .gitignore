@@ -6,6 +6,17 @@ prof/*
 proftest/*
 profile
 
+# misc data that will clog up the repo
+sims/hparams.py
+final-plots/*.png
+final-plots/presentation/*
+final-plots/section2/*
+final-plots/section3/*
+final-plots/section4/*
+real_data/fund_replication/sp_*.csv
+real_data/fund_replication/all_sp_stocks.csv
+real_data/hiv_motivation.ipynb
+
 # Moving things around
 transfer.sh
 

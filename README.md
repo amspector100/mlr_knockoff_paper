@@ -6,5 +6,5 @@ This repository contains all the code to replicate the experiments and real data
 
 The directory ``mlr_src`` contains extraneous functions used in the simulations. However, the core contribution of the paper (MLR statistics) is implemented and published in the ``knockpy`` package to ease installation. 
 
-The directory ``sims`` contains the code which actually runs the simulations. It also contains .sh files which will replicate the exact simulation settings in the paper.
+The directory ``sims`` contains the code which actually runs the simulations. It also contains a ``all_sims.sh`` files which will replicate the exact simulation settings in the paper. The exception is that the data for a few plots was simulated directly in the ``final-plots/final_plots.ipynb`` notebook.
 

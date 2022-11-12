@@ -194,16 +194,15 @@ def single_seed_sim(
 								time0 = time.time()
 								if fstatname != 'oracle' or not mx: 
 									kf.forward(
-										X=X, Xk=Xk, y=y, fstat_kwargs=fstat_kwargs, fdr=0.1,
+										X=X, Xk=Xk, y=y, fstat_kwargs=fstat_kwargs, fdr=0.05,
 									)
 								else:
 									# oracle statistics get to know what y is a linear response to
 									kf.forward(
-										X=fX, Xk=fXk, y=y, fstat_kwargs=fstat_kwargs, fdr=0.1
+										X=fX, Xk=fXk, y=y, fstat_kwargs=fstat_kwargs, fdr=0.05,
 									)
-									#print(np.around(kf.W[beta == 0], 3))
-									#print(np.around(kf.W[beta != 0], 3))
 								fstat_time = time.time() - time0
+
 								for q in args.get("q", [0.05, 0.10, 0.15, 0.20]):
 									T = kstats.data_dependent_threshhold(W=kf.W, fdr=q)
 									rej = (kf.W >= T).astype("float32")
