@@ -152,7 +152,7 @@ def main(args):
 	np.random.seed(12345)
 
 	output = []
-	nyears = args.get("nyears", [5])[0] # either 5 or 10
+	nyears = args.get("nyears", [10])[0]
 	minx_time = f'{2022 - nyears}-01-01'
 
 	# Possibly pull the s&p data
@@ -184,7 +184,7 @@ def main(args):
 	# Create knockoffs
 	for S_method in args.get("s_method", ['mvr', 'sdp']):
 		ksampler_full = knockpy.knockoffs.FXSampler(
-			X=xreturns.values, method=S_method, tol=1e-5 if S_method!='sdp' else 1e-1
+			X=xreturns.values, method=S_method, tol=1e-5
 		)
 		for fund in args.get("funds", FUNDS):
 			fund = str(fund).upper()
@@ -219,7 +219,7 @@ def main(args):
 					# 	continue
 				X -= X.mean(axis=0) ### new
 				ksampler = knockpy.knockoffs.FXSampler(
-					X=X, method=S_method, tol=1e-5 if S_method!='sdp' else 1e-1
+					X=X, method=S_method, tol=1e-5
 				)
 
 			# Log and standardize y

@@ -24,25 +24,37 @@ def elapsed(time0):
 	return np.around(time.time() - time0, 2)
 
 def get_duplicate_columns(X):
-    n, p = X.shape
-    abscorr = np.abs(np.corrcoef(X.T))
-    for j in range(p):
-        for i in range(j+1):
-            abscorr[i, j] = 0
-    to_remove = np.where(abscorr > 1 - 1e-5)[0]
-    return to_remove
+	n, p = X.shape
+	abscorr = np.abs(np.corrcoef(X.T))
+	for j in range(p):
+		for i in range(j+1):
+			abscorr[i, j] = 0
+	to_remove = np.where(abscorr > 1 - 1e-5)[0]
+	return to_remove
 
 def seqstep_plot(W, fdr=0.1):
-    inds = np.argsort(-1*np.abs(W))
-    sortW = W[inds]
-    tau = knockpy.knockoff_stats.data_dependent_threshhold(sortW, fdr=fdr)
-    tau = np.argmin(np.abs(sortW) >= tau)
-    fig, ax = plt.subplots()
-    x = np.arange(W.shape[0])
-    ax.bar(x[sortW >= 0], sortW[sortW >= 0], color='blue')
-    ax.bar(x[sortW < 0], sortW[sortW < 0], color='red')
-    ax.axvline(tau, color='black', linestyle='dotted')
-    plt.show()
+	inds = np.argsort(-1*np.abs(W))
+	sortW = W[inds]
+	tau = knockpy.knockoff_stats.data_dependent_threshhold(sortW, fdr=fdr)
+	tau = np.argmin(np.abs(sortW) >= tau)
+	fig, ax = plt.subplots()
+	x = np.arange(W.shape[0])
+	ax.bar(x[sortW >= 0], sortW[sortW >= 0], color='blue')
+	ax.bar(x[sortW < 0], sortW[sortW < 0], color='red')
+	ax.axvline(tau, color='black', linestyle='dotted')
+	plt.show()
+
+def W_path_df(W):
+	"""
+	Given feature-statistics W creates a dataframe used for plotting.
+	"""
+	p = W.shape[0]
+	inds = np.argsort(-1*np.abs(W), axis=0)
+	sortW = np.take_along_axis(W, inds, axis=0)
+	df = pd.DataFrame()
+	df['W'] = sortW
+	df['rank'] = np.arange(p)
+	return df
 
 def augment_X_y(X, y):
 	n, p = X.shape
@@ -78,12 +90,16 @@ COLUMNS = [
 def main(args):
 	t0 = time.time()
 	output = []
+	W_output = []
+	T_output = []
 	# Common arguments with dependencies
 	q = args.get("q", [0.05])[0]
 	outfile = f"hiv_data/results/num_rej.csv"
+	w_outfile = f"hiv_data/results/W_sorted.csv"
+	t_outfile = f"hiv_data/results/thresholds.csv"
 	# List of signal genes
 	with open("hiv_data/signal_genes.json", 'r') as thefile:
-	    all_signal_genes = json.load(thefile)
+		all_signal_genes = json.load(thefile)
 
 	for drug_type in args.get("drug_types", ["PI", "NRTI", "NNRTI"]):
 		# Signal genes
@@ -122,6 +138,7 @@ def main(args):
 			for S_method in args.get("s_method", ["mvr", "sdp"]):
 				idd = f"drug_type={drug_type}, resistance={col}, S_method={S_method}"
 				print(f"Starting {idd} at {elapsed(t0)}.")
+				np.random.seed(12345)
 				ksampler = knockpy.knockoffs.FXSampler(
 					X=X, method=S_method, tol=1e-3 if S_method=='sdp' else 1e-5
 				)
@@ -129,21 +146,22 @@ def main(args):
 				print(f"Finished sampling knockoffs for {idd} at {elapsed(t0)}.")
 				kfilter = KF(fstat='mlr', ksampler=ksampler)
 				rej_mlr = kfilter.forward(
-				    X=X, 
-				    y=y, 
-				    fdr=q, 
-				    fstat_kwargs={"n_iter":2000, "chains":5}#, "tau2_a0":2, "tau2_b0":0.01}
+					X=X, 
+					y=y, 
+					fdr=q, 
+					fstat_kwargs={"n_iter":2000, "chains":5}#, "tau2_a0":2, "tau2_b0":0.01}
 				)
 				print(f"Finished fitting MLR statistic for {idd} at {elapsed(t0)}.")
-				kfilter2 = KF(fstat='lcd', ksampler=ksampler)
-				rej_lcd = kfilter2.forward(X=X, y=y, fdr=q)
+				kfilter_lcd = KF(fstat='lcd', ksampler=ksampler)
+				rej_lcd = kfilter_lcd.forward(X=X, y=y, fdr=q)
 				print(f"Finished fitting LCD statistic for {idd} at {elapsed(t0)}.")
-				kfilter3 = KF(fstat='lsm', ksampler=ksampler)
-				rej_lsm = kfilter2.forward(X=X, y=y, fdr=q)
+				kfilter_lsm = KF(fstat='lsm', ksampler=ksampler)
+				rej_lsm = kfilter_lsm.forward(X=X, y=y, fdr=q)
 				print(f"Finished fitting LSM statistic for {idd} at {elapsed(t0)}.")
-				for fname, rej in zip(
+				for fname, rej, kf in zip(
 					['MLR', 'LSM', 'LCD'],
-					[rej_mlr, rej_lsm, rej_lcd]
+					[rej_mlr, rej_lsm, rej_lcd],
+					[kfilter, kfilter_lsm, kfilter_lcd],
 				):
 					# Calculate true / false discoveries
 					disc = Xcols[rej.astype(bool)].str.split(".")
@@ -153,12 +171,39 @@ def main(args):
 					ndisc_false = ndisc - ndisc_true
 					output.append([ndisc, ndisc_true, ndisc_false, fname, S_method, col, drug_type])
 
+					# Record W-statistics
+					norm = np.abs(kf.W).max()
+					Wdf = W_path_df(kf.W / norm)
+					Wdf['fstat'] = fname
+					Wdf['knockoff_type'] = S_method
+					Wdf['drug_type'] = drug_type
+					Wdf['drug'] = col
+					W_output.append(Wdf)
+
+					# Threshold
+					Tind = np.argmax(np.abs(Wdf['W'].values) < kf.threshold / norm)
+					T_output.append(
+						[fname, S_method, drug_type, col, Tind]
+					)
+
+				# Save W-statistics and thresholds
+				W_out_df = pd.concat(W_output, axis='index')
+				T_out_df = pd.DataFrame(
+					T_output, columns=['fstat', 'knockoff_type', 'drug_type', 'drug', 'rank']
+				)
+				W_out_df.to_csv(w_outfile, index=False)
+				T_out_df.to_csv(t_outfile, index=False)
+				print(T_out_df)
+				print(W_out_df)
+
 				# Print cumsums so far
 				out_df = pd.DataFrame(output, columns=COLUMNS)
-				out_df.to_csv(outfile)
+				out_df.to_csv(outfile, index=False)
 				print(out_df)
 				print(out_df.groupby(['S_method', 'fstat'])[['ndisc', 'ndisc_true', 'ndisc_false']].sum())
-			
+
+
+				
 
 		# sns.heatmap(np.corrcoef(mutations.T), cmap='RdBu', vmin=-1, vmax=1)
 		# plt.title(f"Heatmap of correlations for drug_type={drug_type}")
