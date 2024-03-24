@@ -44,16 +44,18 @@ def seqstep_plot(W, fdr=0.1):
 	ax.axvline(tau, color='black', linestyle='dotted')
 	plt.show()
 
-def W_path_df(W):
+def W_path_df(W, names=None):
 	"""
 	Given feature-statistics W creates a dataframe used for plotting.
 	"""
 	p = W.shape[0]
 	inds = np.argsort(-1*np.abs(W), axis=0)
-	sortW = np.take_along_axis(W, inds, axis=0)
+	sortW = W[inds]
 	df = pd.DataFrame()
 	df['W'] = sortW
 	df['rank'] = np.arange(p)
+	if names is not None:
+		df['name'] = names[inds]
 	return df
 
 def augment_X_y(X, y):
@@ -91,18 +93,19 @@ def main(args):
 	t0 = time.time()
 	output = []
 	W_output = []
-	T_output = []
+	#T_output = []
 	# Common arguments with dependencies
 	q = args.get("q", [0.05])[0]
 	outfile = f"hiv_data/results/num_rej.csv"
 	w_outfile = f"hiv_data/results/W_sorted.csv"
-	t_outfile = f"hiv_data/results/thresholds.csv"
+	#t_outfile = f"hiv_data/results/thresholds.csv"
 	# List of signal genes
 	with open("hiv_data/signal_genes.json", 'r') as thefile:
 		all_signal_genes = json.load(thefile)
 
 	for drug_type in args.get("drug_types", ["PI", "NRTI", "NNRTI"]):
 		# Signal genes
+		drug_type = drug_type.upper()
 		sig_genes = set(all_signal_genes[drug_type][0])
 		
 		# Load raw data
@@ -117,7 +120,8 @@ def main(args):
 		# loop through y-values
 		for col in args.get("resistances", resistances.columns):
 			# Load y-data
-			ycol = resistances[col]
+			col = col.upper()
+			ycol = resistances[col].copy()
 			X = mutations.loc[ycol.notnull()].copy()
 			y = np.log(ycol[ycol.notnull()].values)
 			y = (y - y.mean()) / y.std()
@@ -149,7 +153,7 @@ def main(args):
 					X=X, 
 					y=y, 
 					fdr=q, 
-					fstat_kwargs={"n_iter":2000, "chains":5}#, "tau2_a0":2, "tau2_b0":0.01}
+					fstat_kwargs={"n_iter":2000, "chains":5}
 				)
 				print(f"Finished fitting MLR statistic for {idd} at {elapsed(t0)}.")
 				kfilter_lcd = KF(fstat='lcd', ksampler=ksampler)
@@ -173,26 +177,16 @@ def main(args):
 
 					# Record W-statistics
 					norm = np.abs(kf.W).max()
-					Wdf = W_path_df(kf.W / norm)
+					Wdf = W_path_df(kf.W / norm, Xcols)
 					Wdf['fstat'] = fname
 					Wdf['knockoff_type'] = S_method
 					Wdf['drug_type'] = drug_type
 					Wdf['drug'] = col
 					W_output.append(Wdf)
 
-					# Threshold
-					Tind = np.argmax(np.abs(Wdf['W'].values) < kf.threshold / norm)
-					T_output.append(
-						[fname, S_method, drug_type, col, Tind]
-					)
-
 				# Save W-statistics and thresholds
 				W_out_df = pd.concat(W_output, axis='index')
-				T_out_df = pd.DataFrame(
-					T_output, columns=['fstat', 'knockoff_type', 'drug_type', 'drug', 'rank']
-				)
 				W_out_df.to_csv(w_outfile, index=False)
-				T_out_df.to_csv(t_outfile, index=False)
 
 				# Print cumsums so far
 				out_df = pd.DataFrame(output, columns=COLUMNS)
