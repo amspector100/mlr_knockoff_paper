@@ -34,7 +34,11 @@ def single_seed_sim(
     sparsity = args.get("sparsity", 0.5)
     correlation_cutoff = args.get("correlation_cutoff", 0.9)
     print(f"Running with args={args} at seed {seed}, total time: {elapsed(t0)}.")
-    sys.stdout.flush()
+    try:
+        sys.stdout.flush()
+    except OSError:
+        # Ignore stale file handle errors in cluster environments
+        pass
 
     # 0. sample data
     np.random.seed(seed)
@@ -68,7 +72,11 @@ def single_seed_sim(
         Xk = ksampler.sample_knockoffs()
         ko_time = time.time() - time0
         print(f"Time taken to create {S_method} knockoffs for seed {seed}: {ko_time}, total time: {elapsed(t0)}")
-        sys.stdout.flush()
+        try:
+            sys.stdout.flush()
+        except OSError:
+            # Ignore stale file handle errors in cluster environments
+            pass
         
         # 3. run knockoff filter for various statistics
         fstats = []

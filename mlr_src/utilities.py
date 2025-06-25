@@ -181,7 +181,7 @@ def get_duplicate_columns(X):
 	n, p = X.shape
 	abscorr = np.abs(np.corrcoef(X.T))
 	for j in range(p):
-	    for i in range(j+1):
-	        abscorr[i, j] = 0
+		for i in range(j+1):
+			abscorr[i, j] = 0
 	to_remove = np.where(abscorr > 1 - 1e-5)[0]
 	return to_remove
