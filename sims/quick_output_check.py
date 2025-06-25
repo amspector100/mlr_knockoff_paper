@@ -50,6 +50,7 @@ def check_job_outputs(job_id, group_cols="n,p,method", meas_cols="power,fdp"):
     
     # Group by specified columns and calculate mean power
     required_cols = group_cols + meas_cols
+    print(f"NUMBER OF SEEDS: {len(combined_df['seed'].unique())}.")
     if all(col in combined_df.columns for col in required_cols):
         grouped_means = combined_df.groupby(group_cols)[meas_cols].mean()
         print(f"\nMean {meas_cols} by ({', '.join(group_cols)}):")

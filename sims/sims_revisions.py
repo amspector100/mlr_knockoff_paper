@@ -28,11 +28,16 @@ def single_seed_sim(
     - Only MX knockoffs
     """
     output = []
-    n = args.get("n", 1000)
     p = args.get("p", 500)
+    if 'kappa' in args and 'n' not in args:
+        n = int(np.ceil(args.get("kappa") * p))
+    else:
+        n = args.get("n", 1000)
     covmethod = args.get("covmethod", "AR1")
     sparsity = args.get("sparsity", 0.5)
     correlation_cutoff = args.get("correlation_cutoff", 0.9)
+    coeff_size = args.get("coeff_size", 0.5)
+
     print(f"Running with args={args} at seed {seed}, total time: {elapsed(t0)}.")
     try:
         sys.stdout.flush()
@@ -48,9 +53,20 @@ def single_seed_sim(
         p=p,
         method=covmethod,
         sparsity=sparsity,
+        coeff_size=coeff_size,
     )
     X = dgprocess.X
-    Sigma = dgprocess.Sigma
+    estimate_sigma = args.get("estimate_sigma", True)
+    if estimate_sigma:
+        print("Estimating Sigma...")
+        time0 = time.time()
+        if n > p + 2:
+            Sigma = np.cov(X.T)
+        else:
+            Sigma, _ = knockpy.utilities.estimate_covariance(X)
+        print(f"Time taken to estimate Sigma: {time.time() - time0}, total time: {elapsed(t0)}.")
+    else:
+        Sigma = dgprocess.Sigma
     y = dgprocess.y
     beta = dgprocess.beta
     
@@ -80,13 +96,17 @@ def single_seed_sim(
         
         # 3. run knockoff filter for various statistics
         fstats = []
+        fstat_kwargs = []
         if args.get("run_mlr", True):
             fstats.append("mlr")
+            fstat_kwargs.append(dict(n_iter=args.get("n_iter", [2000])[0], chains=args.get("chains", [5])[0]))
         if args.get("run_lcd", True):
             fstats.append("lcd")
+            fstat_kwargs.append({})
         if args.get("run_lsm", True):
-            fstats.append("lsm")        
-        for fstat in fstats:
+            fstats.append("lsm")  
+            fstat_kwargs.append({})      
+        for fstat, fkwargs in zip(fstats, fstat_kwargs):
             time0 = time.time()
             kf = KF(
                 ksampler=ksampler,
@@ -123,6 +143,8 @@ def single_seed_sim(
                     "sparsity": sparsity,
                     "correlation_cutoff": correlation_cutoff,
                     "ngroups": len(np.unique(groups)),
+                    "estimate_sigma": estimate_sigma,
+                    "coeff_size": coeff_size,
                 })
 
     return output

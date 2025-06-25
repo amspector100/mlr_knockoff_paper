@@ -1,7 +1,7 @@
 #!/bin/bash
-#SBATCH --job-name=groupknock
-#SBATCH --output=slurm_logs/groupknock_%A_%a.out # %A=job ID, %a=task ID
-#SBATCH --error=slurm_logs/groupknock_%A_%a.err
+#SBATCH --job-name=robustness
+#SBATCH --output=slurm_logs/robustness_%A_%a.out # %A=job ID, %a=task ID
+#SBATCH --error=slurm_logs/robustness_%A_%a.err
 #SBATCH --time=06:00:00
 #SBATCH --mem=4G
 #SBATCH --partition=candes,stat,hns,normal
@@ -18,17 +18,19 @@ module load gcc/14.2.0
 module load openblas/0.3.28
 source /home/users/aspector/mlr/.venv/bin/activate
 
-GROUPKNOCK_ARGS="
+ROBUSTNESS_ARGS="
         --p 500
-        --n 250
-        --covmethod [ar1]
-        --correlation_cutoff [1,0.9,0.8,0.7,0.6]
-        --num_processes 1
-        --reps ${REPS}
-        --job_id ${job_id}
-        --seed_start ${seed_start}
+        --covmethod [ar1,ver]
+        --coeff_size [0.5,1]
+        --mx [True]
+        --sparsity 0.1
+        --kappa [0.25,0.5,0.75,1,1.25,1.5]
+        --correlation_cutoff 1
+        --estimate_sigma true
+        --num_processes $NUM_PROCESSES
+        --reps $REPS
 "
 
-python groupknock.py $GROUPKNOCK_ARGS
+python sims_revisions.py $ROBUSTNESS_ARGS
  
 echo "Task ${seed_start} finished with exit code $?"
