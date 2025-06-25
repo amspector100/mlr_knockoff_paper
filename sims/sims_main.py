@@ -269,10 +269,11 @@ def main(args):
 	ps = args.get('p', [300]) # dimensionality
 	kappas = args.get('kappa', [2.1, 3, 4]) # ratio of n/p
 	covmethods = args.get('covmethod', ['AR1']) # cov matrix
+	jobid = args.get('jobid', [0])[0]
 
 	# Save args, create output dir
 	output_dir = utilities.create_output_directory(args, dir_type=DIR_TYPE)
-	output_path = output_dir + 'results.csv'
+	output_path = output_dir + f'jobid{jobid}_seedstart{seed_start}_results.csv'
 	summary_path = output_dir + 'summary.csv'
 
 	# Run and save output

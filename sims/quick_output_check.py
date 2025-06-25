@@ -55,6 +55,7 @@ def check_job_outputs(job_id, group_cols="n,p,method", meas_cols="power,fdp"):
     if all(col in combined_df.columns for col in required_cols):
         grouped_means = combined_df.groupby(group_cols)[meas_cols].mean()
         print(f"\nMean {meas_cols} by ({', '.join(group_cols)}):")
+        pd.set_option('display.max_rows', 500)
         print(grouped_means.reset_index())
     else:
         missing_cols = [col for col in required_cols if col not in combined_df.columns]
