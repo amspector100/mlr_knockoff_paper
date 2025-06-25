@@ -16,6 +16,17 @@ from itertools import product
 def elapsed(t0):
 	return np.around(time.time() - t0, 2)
 
+def safe_stdout_flush():
+	"""
+	Safely flush stdout, ignoring stale file handle errors 
+	that can occur in cluster environments.
+	"""
+	try:
+		sys.stdout.flush()
+	except OSError:
+		# Ignore stale file handle errors (errno 116) in cluster environments
+		pass
+
 ### Multiprocessing helper
 def _one_arg_function(list_of_inputs, args, func, kwargs):
 	"""
@@ -181,7 +192,7 @@ def get_duplicate_columns(X):
 	n, p = X.shape
 	abscorr = np.abs(np.corrcoef(X.T))
 	for j in range(p):
-	    for i in range(j+1):
-	        abscorr[i, j] = 0
+		for i in range(j+1):
+			abscorr[i, j] = 0
 	to_remove = np.where(abscorr > 1 - 1e-5)[0]
 	return to_remove
