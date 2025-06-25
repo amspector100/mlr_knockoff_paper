@@ -15,10 +15,9 @@ seed_start=${SLURM_ARRAY_TASK_ID}
 
 # Load any modules needed
 module load gcc/14.2.0
-module load python/3.13.1
 source /home/users/aspector/mlr/.venv/bin/activate
 
-GROUPKNOCK_ARGS = "
+GROUPKNOCK_ARGS="
         --p 500
         --n 1000
         --covmethod [ar1,ver]

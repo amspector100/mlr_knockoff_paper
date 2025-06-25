@@ -20,7 +20,6 @@ DIR_TYPE = os.path.split(os.path.abspath(__file__))[1].split(".py")[0]
 
 def single_seed_sim(
     seed,
-    correlation_cutoff,
     t0,
     **args,
 ):
@@ -33,6 +32,9 @@ def single_seed_sim(
     p = args.get("p", 500)
     covmethod = args.get("covmethod", "AR1")
     sparsity = args.get("sparsity", 0.5)
+    correlation_cutoff = args.get("correlation_cutoff", 0.9)
+    print(f"Running with args={args} at seed {seed}, total time: {elapsed(t0)}.")
+    sys.stdout.flush()
 
     # 0. sample data
     np.random.seed(seed)
