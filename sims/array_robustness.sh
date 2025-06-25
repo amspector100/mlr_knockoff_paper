@@ -27,7 +27,7 @@ ROBUSTNESS_ARGS="
         --kappa [0.25,0.5,0.75,1,1.25,1.5]
         --correlation_cutoff 1
         --estimate_sigma true
-        --num_processes $NUM_PROCESSES
+        --num_processes 1
         --reps $REPS
 "
 
