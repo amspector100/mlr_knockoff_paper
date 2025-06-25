@@ -29,8 +29,8 @@ def single_seed_sim(
     - Only MX knockoffs
     """
     output = []
-    n = args.get("n", 500)
-    p = args.get("p", 200)
+    n = args.get("n", 1000)
+    p = args.get("p", 500)
     covmethod = args.get("covmethod", "AR1")
     sparsity = args.get("sparsity", 0.5)
 
@@ -111,6 +111,8 @@ def single_seed_sim(
                     "ko_time": ko_time,
                     "covmethod": covmethod,
                     "sparsity": sparsity,
+                    "correlation_cutoff": correlation_cutoff,
+                    "ngroups": len(np.unique(groups)),
                 })
 
     return output
@@ -120,16 +122,17 @@ def main(args):
     # Parse and extract arguments
     t0 = time.time()
 
-    # keywords for the data-generating process for X
+    # keywords for the whole simulation
+    num_processes = args.pop('num_processes', [1])[0]
     seed_start = args.pop("seed_start", [0])[0]
     reps = args.pop('reps', [1])[0] # number of replications
-    num_processes = args.pop('num_processes', [1])[0]
     args['seed'] = list(range(seed_start, seed_start + reps))
     args['correlation_cutoff'] = args.get('correlation_cutoff', [0.9])
+    job_id = args.pop('job_id', [0])[0]
 
     # Save args, create output dir
     output_dir = utilities.create_output_directory(args, dir_type=DIR_TYPE)
-    output_path = output_dir + 'results.csv'
+    output_path = output_dir + f'jobid{job_id}_seedstart{seed_start}_results.csv'
 
     # Run and save output
     args.pop("description")
