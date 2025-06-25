@@ -57,7 +57,11 @@ def single_seed_sim(
 	args
 ):
 	print(f"At seed={seed}, n={n}, p={p}.")
-	sys.stdout.flush()
+	try:
+		sys.stdout.flush()
+	except OSError:
+		# Ignore stale file handle errors in cluster environments
+		pass
 
 	# 1. Create data-generating process for X
 	output = []
@@ -111,7 +115,11 @@ def single_seed_sim(
 		Xk = ksampler.sample_knockoffs()
 		ko_time = np.around(time.time() - time0, 2)
 		print(f"Finished sampling {S_method} knockoffs for seed={seed}, took {ko_time} at {elapsed(t0)}.")
-		sys.stdout.flush()
+		try:
+			sys.stdout.flush()
+		except OSError:
+			# Ignore stale file handle errors in cluster environments
+			pass
 
 		# 3. Generate y
 		for sparse in args.get('sparsity', [0.1]):

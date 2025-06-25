@@ -16,6 +16,17 @@ from itertools import product
 def elapsed(t0):
 	return np.around(time.time() - t0, 2)
 
+def safe_stdout_flush():
+	"""
+	Safely flush stdout, ignoring stale file handle errors 
+	that can occur in cluster environments.
+	"""
+	try:
+		sys.stdout.flush()
+	except OSError:
+		# Ignore stale file handle errors (errno 116) in cluster environments
+		pass
+
 ### Multiprocessing helper
 def _one_arg_function(list_of_inputs, args, func, kwargs):
 	"""
