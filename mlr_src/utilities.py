@@ -11,6 +11,7 @@ import numpy as np
 import pandas as pd
 from multiprocessing import Pool
 from functools import partial
+from itertools import product
 
 def elapsed(t0):
 	return np.around(time.time() - t0, 2)
@@ -28,6 +29,54 @@ def _one_arg_function(list_of_inputs, args, func, kwargs):
 	for i, inp in enumerate(list_of_inputs):
 		new_kwargs[args[i]] = inp
 	return func(**new_kwargs, **kwargs)
+
+def apply_pool_factorial(
+	func, 
+	constant_inputs={}, 
+	num_processes=1, 
+	**kwargs
+):
+	"""
+	Spawns num_processes processes to apply func to many different arguments.
+	This wraps the multiprocessing.pool object plus the functools partial function. 
+	
+	Parameters
+	----------
+	func : function
+		An arbitrary function
+	constant_inputs : dictionary
+		A dictionary of arguments to func which do not change in each
+		of the processes spawned, defaults to {}.
+	num_processes : int
+		The maximum number of processes spawned, defaults to 1.
+	kwargs : dict
+		Each key should correspond to an argument to func and should
+		map to a list of different arguments.
+	Returns
+	-------
+	outputs : list
+		List of outputs for each input, in the order of the inputs.
+	Examples
+	--------
+	If we are varying inputs 'a' and 'b', we might have
+	``apply_pool(
+		func=my_func, a=[1,2], b=[5]
+	)``
+	which would return ``[my_func(a=1, b=5), my_func(a=2,b=5)]``.
+	"""
+	# Construct input sequence 
+	args = sorted(kwargs.keys())
+	kwarg_prod = list(product(*[kwargs[x] for x in args]))
+	# Prepare to send this to apply pool
+	final_kwargs = {}
+	for i, arg in enumerate(args):
+		final_kwargs[arg] = [k[i] for k in kwarg_prod]
+	return apply_pool(
+		func=func, 
+		constant_inputs=constant_inputs,
+		num_processes=num_processes,
+		**final_kwargs
+	)
 
 
 def apply_pool(func, constant_inputs={}, num_processes=1, **kwargs):
@@ -110,9 +159,14 @@ def create_output_directory(args, dir_type='misc', return_date=False):
 		return output_dir, today, hour
 	return output_dir
 
-def calc_power_fdr(rejections, beta):
+def calc_power_fdr(rejections, beta, groups=None):
 	# Calculate which features are not null
-	nnulls = beta != 0
+	if groups is None:
+		nnulls = beta != 0
+	else:
+		nnulls = np.array(
+			[np.any(beta[groups == i] != 0) for i in np.sort(np.unique(groups))]
+		)
 	# number of disc/false discoveries
 	n_disc = np.sum(rejections)
 	n_false_disc = np.sum(rejections * (1 - nnulls))

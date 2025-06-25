@@ -204,33 +204,46 @@ def single_seed_sim(
 								fstat_time = time.time() - time0
 
 								for q in args.get("q", [0.05, 0.10, 0.15, 0.20]):
-									T = kstats.data_dependent_threshhold(W=kf.W, fdr=q)
-									rej = (kf.W >= T).astype("float32")
-									power, fdp = utilities.calc_power_fdr(
-										rej,
-										beta,
-									)
+									# Possibly compute MLR and AMLR statistics.
+									# This is done this way to save time but this logic
+									# does not affect the other statistics
+									Ws = [kf.W]
+									fnames = [fstatname]
+									if fstatname == 'mlr':
+										# hack to compute AMLR statistics at this FDR level
+										kf.fstat.adjusted_mlr = True
+										kf.fstat.fdr = q
+										Ws.append(kf.fstat.compute_W())
+										fnames.append("amlr")
 
-									# Add output
-									output.append([
-										n,
-										p,
-										covmethod,
-										sparse,
-										coeff_size,
-										coeff_dist,
-										seed,
-										cond_mean,
-										y_dist,
-										mx,
-										S_method,
-										fstatname,
-										q,
-										power,
-										fdp,
-										fstat_time,
-										ko_time
-									])
+									for W, fname in zip(Ws, fnames):
+										T = kstats.data_dependent_threshhold(W=W, fdr=q)
+										rej = (W >= T).astype("float32")
+										power, fdp = utilities.calc_power_fdr(
+											rej,
+											beta,
+										)
+
+										# Add output
+										output.append([
+											n,
+											p,
+											covmethod,
+											sparse,
+											coeff_size,
+											coeff_dist,
+											seed,
+											cond_mean,
+											y_dist,
+											mx,
+											S_method,
+											fname,
+											q,
+											power,
+											fdp,
+											fstat_time,
+											ko_time
+										])
 	return output
 
 

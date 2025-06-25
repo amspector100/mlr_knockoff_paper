@@ -1,5 +1,5 @@
-REPS=10
-NUM_PROCESSES=2
+REPS=150
+NUM_PROCESSES=1
 
 LINEAR_FX_ARGS="
         --p 500
@@ -8,7 +8,7 @@ LINEAR_FX_ARGS="
         --mx [False]
         --sparsity 0.1
         --kappa [2.05,2.5,3,3.5,4.0,4.5,5.0]
-        --num_processes $NUM_PROCESSES
+	--num_processes $NUM_PROCESSES
         --reps $REPS
 "
 LINEAR_MX_ARGS="
@@ -33,8 +33,6 @@ SPARSE_ARGS="
         --num_processes $NUM_PROCESSES
         --reps $REPS
 "
-
-# cond means: 
 
 NONLIN_ARGS="
         --p 200
@@ -79,10 +77,51 @@ LOGISTIC_ARGS="
         --compute_lsm False
         --compute_mlr True
         --num_processes $NUM_PROCESSES
-        --reps 94
+        --reps $REPS
+"
+
+AMLR_ARGS="
+        --p 500
+        --covmethod [ar1]
+        --coeff_size [1]
+        --mx [True]
+        --sparsity 0.2
+        --kappa [0.25,0.5,0.75,1,1.25,1.5]
+        --compute_lcd False
+        --compute_lsm False
+        --n_iter 1000
+        --reps $REPS
+        --num_processes $NUM_PROCESSES
+        --s_method mvr
+"
+
+AMLR_ARGS_FX="
+        --p 500
+        --covmethod ar1
+        --coeff_size 0.5
+        --mx False
+        --sparsity 0.2
+        --kappa [2.05,2.5,3,3.5,4.0,4.5,5.0]
+        --compute_lcd False
+        --compute_lsm False
+        --n_iter 1000
+        --reps $REPS
+        --num_processes $NUM_PROCESSES
+        --s_method mvr
+"
+
+GROUPKNOCK_ARGS = "
+        --p 500
+        --n 1000
+        --covmethod [ar1,ver]
+        --correlation_cutoff [1,0.9,0.8,0.7,0.6]
+        --reps 50
+        --num_processes $NUM_PROCESSES
 "
 
 
+python groupknock.py $GROUPKNOCK_ARGS
+#python3.9 main.py $AMLR_ARGS_FX
 #python3.9 main.py $LINEAR_FX_ARGS
 #python3.9 main.py $LINEAR_MX_ARGS
 #python3.9 main.py $SPARSE_ARGS
