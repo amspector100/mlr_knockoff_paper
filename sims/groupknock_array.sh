@@ -6,7 +6,7 @@
 #SBATCH --mem=4G
 #SBATCH --partition=candes,stat,hns,normal
 #SBATCH --cpus-per-task=1
-#SBATCH --array=1-10:1
+#SBATCH --array=1-256:1
 
 REPS=1 # make sure this matches the increment in the SBATCH --array line
 
@@ -15,13 +15,14 @@ seed_start=${SLURM_ARRAY_TASK_ID}
 
 # Load any modules needed
 module load gcc/14.2.0
+module load openblas/0.3.28
 source /home/users/aspector/mlr/.venv/bin/activate
 
 GROUPKNOCK_ARGS="
         --p 500
         --n 1000
         --covmethod [ar1,ver]
-        --correlation_cutoff [1,0.9,0.7]
+        --correlation_cutoff [1,0.9,0.8,0.7,0.6]
         --num_processes 1
         --reps ${REPS}
         --job_id ${job_id}
