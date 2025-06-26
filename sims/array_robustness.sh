@@ -29,6 +29,8 @@ ROBUSTNESS_ARGS="
         --estimate_sigma true
         --num_processes 1
         --reps $REPS
+        --job_id ${job_id}
+        --seed_start ${seed_start}
 "
 
 python sims_revisions.py $ROBUSTNESS_ARGS
