@@ -11,6 +11,7 @@ import pandas as pd
 from context import knockpy, mlr_src
 from mlr_src import parser, utilities
 from mlr_src.utilities import elapsed
+from mlr_src.studentized import StudentizedLassoStatistic
 from knockpy import knockoffs
 from knockpy.knockoff_filter import KnockoffFilter as KF
 from knockpy import knockoff_stats as kstats
@@ -82,6 +83,8 @@ def single_seed_sim(
     
     # 2. create knockoffs
     S_methods = args.get("s_method", ['mvr', 'sdp'])
+    if isinstance(S_methods, str):
+        S_methods = [S_methods]
     for S_method in S_methods:
         time0 = time.time()
         ksampler = knockoffs.GaussianSampler(
@@ -101,15 +104,18 @@ def single_seed_sim(
         fstats = []
         fstat_kwargs = []
         if args.get("run_mlr", True):
-            fstats.append("mlr")
+            fstats.append(("mlr", "mlr"))
             fstat_kwargs.append(dict(n_iter=args.get("n_iter", [2000])[0], chains=args.get("chains", [5])[0]))
         if args.get("run_lcd", True):
-            fstats.append("lcd")
+            fstats.append(("lcd", "lcd"))
             fstat_kwargs.append({})
         if args.get("run_lsm", True):
-            fstats.append("lsm")  
+            fstats.append(("lsm", "lsm"))  
             fstat_kwargs.append({})      
-        for fstat, fkwargs in zip(fstats, fstat_kwargs):
+        if args.get("run_studentized", True):
+            fstats.append(("lcd_studentized", StudentizedLassoStatistic()))
+            fstat_kwargs.append({})
+        for (fstat_name, fstat), fkwargs in zip(fstats, fstat_kwargs):
             time0 = time.time()
             kf = KF(
                 ksampler=ksampler,
@@ -123,10 +129,12 @@ def single_seed_sim(
                 fdr=0.05,
             )
             fstat_time = time.time() - time0
-            print(f"fstat time for {S_method}, {fstat} seed {seed}: {fstat_time}, total time: {elapsed(t0)}")
+            print(f"fstat time for {S_method}, {fstat_name} seed {seed}: {fstat_time}, total time: {elapsed(t0)}")
 
-
-            for q in args.get("q", [0.05, 0.10, 0.15, 0.20]):
+            qs = args.get("q", [0.05, 0.10, 0.15, 0.20])
+            if isinstance(qs, float):
+                qs = [qs]
+            for q in qs:
                 T = kstats.data_dependent_threshhold(W=kf.W, fdr=q)
                 rej = (kf.W >= T).astype("float32")
                 power, fdp = utilities.calc_power_fdr(rej, beta, groups=groups)
@@ -136,7 +144,7 @@ def single_seed_sim(
                     "n": n,
                     "p": p,
                     "knockoff_type": S_method,
-                    "fstat": fstat,
+                    "fstat": fstat_name,
                     "q": q,
                     "power": power,
                     "fdp": fdp,
