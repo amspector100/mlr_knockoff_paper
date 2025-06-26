@@ -14,6 +14,7 @@ from mlr_src.utilities import elapsed
 from knockpy import knockoffs
 from knockpy.knockoff_filter import KnockoffFilter as KF
 from knockpy import knockoff_stats as kstats
+from sims_main import get_covmethod_sample_kwargs
 
 # Specifies the type of simulation
 DIR_TYPE = os.path.split(os.path.abspath(__file__))[1].split(".py")[0]
@@ -48,12 +49,14 @@ def single_seed_sim(
     # 0. sample data
     np.random.seed(seed)
     dgprocess = knockpy.dgp.DGP()
+    sample_kwargs, _ = get_covmethod_sample_kwargs(covmethod, args)
     dgprocess.sample_data(
         n=n,
         p=p,
         method=covmethod,
         sparsity=sparsity,
         coeff_size=coeff_size,
+        **sample_kwargs
     )
     X = dgprocess.X
     estimate_sigma = args.get("estimate_sigma", True)

@@ -8,12 +8,14 @@ import time
 
 import numpy as np
 import pandas as pd
+from scipy import stats
 from context import knockpy, mlr_src
 from mlr_src import gen_data, oracle, parser, utilities
 from mlr_src.utilities import elapsed
 from knockpy import knockoffs
 from knockpy.knockoff_filter import KnockoffFilter as KF
 from knockpy import knockoff_stats as kstats
+import warnings
 
 # bayes coeff diff, requires pyblip
 try:
@@ -47,6 +49,21 @@ columns = [
 	"ko_time",
 ]
 
+def get_covmethod_sample_kwargs(covmethod, args):
+	max_corr = args.get('max_corr', [0.99])[0]
+	sample_kwargs = {}
+	if covmethod in ['ver', 'ar1']:
+		sample_kwargs['max_corr'] = max_corr
+	if covmethod == 'ar1':
+		sample_kwargs['a'] = args.get("a", [5])[0]
+		sample_kwargs['b'] = args.get("b", [1])[0]
+	if covmethod == 'blockequi':
+		sample_kwargs['rho'] = args.get("rho", [0.5])[0]
+		sample_kwargs['gamma'] = args.get("gamma", [0])[0]
+	if covmethod == 'ver':
+		sample_kwargs['delta'] = args.get("delta", [0.2])[0]
+	return sample_kwargs, max_corr
+
 def single_seed_sim(
 	seed,
 	n,
@@ -67,19 +84,8 @@ def single_seed_sim(
 	output = []
 	np.random.seed(seed)
 	dgprocess = knockpy.dgp.DGP()
-	max_corr = args.get('max_corr', [0.99])[0]
+	sample_kwargs, max_corr = get_covmethod_sample_kwargs(covmethod, args)
 	if covmethod not in ['orthogonal', 'ark']:
-		sample_kwargs = {}
-		if covmethod in ['ver', 'ar1']:
-			sample_kwargs['max_corr'] = max_corr
-		if covmethod == 'ar1':
-			sample_kwargs['a'] = args.get("a", [5])[0]
-			sample_kwargs['b'] = args.get("b", [1])[0]
-		if covmethod == 'blockequi':
-			sample_kwargs['rho'] = args.get("rho", [0.5])[0]
-			sample_kwargs['gamma'] = args.get("gamma", [0])[0]
-		if covmethod == 'ver':
-			sample_kwargs['delta'] = args.get("delta", [0.2])[0]
 		dgprocess.sample_data(
 			n=n,
 			p=p,
