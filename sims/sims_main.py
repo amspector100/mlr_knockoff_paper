@@ -12,6 +12,7 @@ from scipy import stats
 from context import knockpy, mlr_src
 from mlr_src import gen_data, oracle, parser, utilities
 from mlr_src.utilities import elapsed
+from mlr_src.studentized import StudentizedLassoStatistic
 from knockpy import knockoffs
 from knockpy.knockoff_filter import KnockoffFilter as KF
 from knockpy import knockoff_stats as kstats
@@ -179,6 +180,8 @@ def single_seed_sim(
 								fstats.append(('lcd', 'lcd'))
 							if args.get('compute_lsm', [True])[0]:
 								fstats.append(('lsm', 'lsm'))
+							if args.get("compute_studentized", [True])[0]:
+								fstats.append((StudentizedLassoStatistic(), 'lcd_studentized'))
 							# MLR statistics + bayesian baseline
 							if args.get('compute_mlr', [True])[0]:
 								fstats.append(('mlr', 'mlr'))
@@ -318,7 +321,7 @@ def main(args):
 					).reset_index()
 					summary.to_csv(summary_path, index=False)
 					pd.set_option('display.max_rows', 500)
-					#pd.set_option('display.max_columns', 10)
+					pd.set_option('display.max_columns', 20)
 					print(summary)
 					pd.reset_option('display.max_rows|display.max_columns|display.width')
 
