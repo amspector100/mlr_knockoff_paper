@@ -175,15 +175,26 @@ def calc_power_fdr(rejections, beta, groups=None):
 	if groups is None:
 		nnulls = beta != 0
 	else:
+		if np.any(np.sort(np.unique(groups).astype(int)) != np.arange(1, len(np.unique(groups)) + 1)):
+			raise ValueError("Groups must be consecutive integers starting from 1")
 		nnulls = np.array(
 			[np.any(beta[groups == i] != 0) for i in np.sort(np.unique(groups))]
 		)
 	# number of disc/false discoveries
 	n_disc = np.sum(rejections)
 	n_false_disc = np.sum(rejections * (1 - nnulls))
-	# Power and fdr
-	power = (n_disc - n_false_disc) / max(1, nnulls.sum())
 	fdr = n_false_disc / max(1, n_disc)
+
+	# power; we use a naive definition for group knockoffs so that power 
+	# goes up when you use coarser groups
+	if groups is None:
+		power = (n_disc - n_false_disc) / max(1, nnulls.sum())
+	else:
+		n_true_disc = 0
+		for i in np.unique(groups):
+			if rejections[i-1]:
+				n_true_disc += np.sum((beta[groups ==i] != 0).astype(int))
+		power = n_true_disc / max(1, np.sum((beta != 0).astype(int)))
 	return (power, fdr)
 
 
