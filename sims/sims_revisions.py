@@ -145,6 +145,7 @@ def single_seed_sim(
                     "ngroups": len(np.unique(groups)),
                     "estimate_sigma": estimate_sigma,
                     "coeff_size": coeff_size,
+                    "seed": seed,
                 })
 
     return output
