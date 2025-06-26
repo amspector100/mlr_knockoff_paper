@@ -64,10 +64,7 @@ def single_seed_sim(
     if estimate_sigma:
         print("Estimating Sigma...")
         time0 = time.time()
-        if n > p + 2:
-            Sigma = np.cov(X.T)
-        else:
-            Sigma, _ = knockpy.utilities.estimate_covariance(X)
+        Sigma, _ = knockpy.utilities.estimate_covariance(X, shrinkage='ledoitwolf')
         print(f"Time taken to estimate Sigma: {time.time() - time0}, total time: {elapsed(t0)}.")
     else:
         Sigma = dgprocess.Sigma

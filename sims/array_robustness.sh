@@ -21,10 +21,10 @@ source /home/users/aspector/mlr/.venv/bin/activate
 ROBUSTNESS_ARGS="
         --p 500
         --covmethod [ar1,ver]
-        --coeff_size [0.5,1]
+        --coeff_size [0.5]
         --mx [True]
         --sparsity 0.1
-        --kappa [0.25,0.5,0.75,1,1.25,1.5]
+        --kappa [0.25,0.375,0.5,0.625,0.75,0.875,1,1.125,1.25,1.375,1.5]
         --correlation_cutoff 1
         --estimate_sigma true
         --num_processes 1
