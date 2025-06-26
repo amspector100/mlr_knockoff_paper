@@ -23,8 +23,8 @@ GROUPKNOCK_ARGS="
         --covmethod [ar1]
         --coeff_size 0.5
         --sparsity 0.1
-        --correlation_cutoff [1,0.85,0.7]
-        --n [375]
+        --correlation_cutoff [1,0.9,0.8,0.7,0.6]
+        --n [250,375,500,625]
         --num_processes 1
         --reps ${REPS}
         --job_id ${job_id}

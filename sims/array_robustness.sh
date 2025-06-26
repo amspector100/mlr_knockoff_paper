@@ -6,7 +6,7 @@
 #SBATCH --mem=4G
 #SBATCH --partition=candes,stat,hns,normal
 #SBATCH --cpus-per-task=1
-#SBATCH --array=1-56:1
+#SBATCH --array=1-256:1
 
 REPS=1 # make sure this matches the increment in the SBATCH --array line
 
