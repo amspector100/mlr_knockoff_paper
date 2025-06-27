@@ -145,10 +145,10 @@ AMLR_ARGS_FX="
         --seed_start ${seed_start}
 "
 
-#python3.9 sims_main.py $AMLR_ARGS_FX
-python3.9 sims_main.py $LINEAR_FX_ARGS
-python3.9 sims_main.py $LINEAR_MX_ARGS
-#python3.9 sims_main.py $SPARSE_ARGS
-#python3.9 sims_main.py $NONLIN_ARGS
-#python3.9 sims_main.py $VP_ARGS
-#python3.9 sims_main.py $LOGISTIC_ARGS
+#python sims_main.py $AMLR_ARGS_FX
+python sims_main.py $LINEAR_FX_ARGS
+python sims_main.py $LINEAR_MX_ARGS
+#python sims_main.py $SPARSE_ARGS
+#python sims_main.py $NONLIN_ARGS
+#python sims_main.py $VP_ARGS
+#python sims_main.py $LOGISTIC_ARGS
