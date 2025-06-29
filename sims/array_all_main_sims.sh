@@ -2,11 +2,11 @@
 #SBATCH --job-name=main
 #SBATCH --output=slurm_logs/main_%A_%a.out # %A=job ID, %a=task ID
 #SBATCH --error=slurm_logs/main_%A_%a.err
-#SBATCH --time=06:00:00
+#SBATCH --time=24:00:00
 #SBATCH --mem=4G
 #SBATCH --partition=candes,stat,hns,normal
 #SBATCH --cpus-per-task=1
-#SBATCH --array=1-512:1
+#SBATCH --array=56-256:1
 
 REPS=1 # make sure this matches the increment in the SBATCH --array line
 NUM_PROCESSES=1

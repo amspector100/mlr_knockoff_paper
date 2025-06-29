@@ -6,7 +6,7 @@
 #SBATCH --mem=4G
 #SBATCH --partition=candes,stat,hns,normal
 #SBATCH --cpus-per-task=1
-#SBATCH --array=1-256:1
+#SBATCH --array=1-512:1
 
 REPS=1 # make sure this matches the increment in the SBATCH --array line
 
@@ -21,7 +21,7 @@ source /home/users/aspector/mlr/.venv/bin/activate
 ROBUSTNESS_ARGS="
         --p 500
         --covmethod [ar1,ver]
-        --coeff_size [0.5]
+        --coeff_size [0.25,0.5]
         --mx [True]
         --sparsity 0.1
         --kappa [0.25,0.375,0.5,0.625,0.75,0.875,1,1.125,1.25,1.375,1.5]
