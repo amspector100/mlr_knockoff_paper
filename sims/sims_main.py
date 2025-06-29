@@ -51,7 +51,9 @@ columns = [
 ]
 
 def get_covmethod_sample_kwargs(covmethod, args):
-	max_corr = args.get('max_corr', [0.99])[0]
+	max_corr = args.get('max_corr', [0.99])
+	if isinstance(max_corr, list):
+		max_corr = max_corr[0]
 	sample_kwargs = {}
 	if covmethod in ['ver', 'ar1']:
 		sample_kwargs['max_corr'] = max_corr
