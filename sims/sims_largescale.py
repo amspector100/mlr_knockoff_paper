@@ -15,6 +15,24 @@ import pandas as pd
 from sklearn.linear_model import LassoCV, Lasso
 from memory_profiler import profile
 
+## Clean environment before importing R
+# Remove problematic bash functions from python environment
+bash_funcs_to_remove = [
+	'BASH_FUNC__cache_cmd', 'BASH_FUNC_sacct', 'BASH_FUNC_squeue', 
+	'BASH_FUNC_sinfo', 'BASH_FUNC_sstat', 'BASH_FUNC_sh_jobs',
+	'BASH_FUNC_sh_quota', 'BASH_FUNC_sh_usage', 'BASH_FUNC_sh_jobwait',
+	'BASH_FUNC_sh_part', 'BASH_FUNC_sh_next_downtime', 'BASH_FUNC_sudo',
+	'BASH_FUNC_sleep', 'BASH_FUNC_bc', 'BASH_FUNC_sh_status', 
+	'BASH_FUNC_ml', 'BASH_FUNC_module'
+]
+
+for func in bash_funcs_to_remove:
+	if func in os.environ:
+		del os.environ[func]
+
+# # Suppress rpy2 warnings
+# warnings.filterwarnings('ignore', category=UserWarning, module='rpy2')
+
 ## imports for R
 import rpy2
 from rpy2.robjects.numpy2ri import numpy2rpy
