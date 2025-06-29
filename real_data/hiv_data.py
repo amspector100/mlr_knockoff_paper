@@ -18,7 +18,6 @@ from knockpy.knockoff_filter import KnockoffFilter as KF
 from knockpy import knockoff_stats as kstats
 
 import warnings
-import statsmodels.api as sm
 
 def elapsed(time0):
 	return np.around(time.time() - time0, 2)
