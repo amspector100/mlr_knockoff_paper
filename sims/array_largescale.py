@@ -58,19 +58,27 @@ def main():
             "--job-name=mlr_largescale",
             f"--output=slurm_logs_ls/mlr_largescale_{job_id}_p{p}_n{n}_ncores{ncores}_mem{req_mb}.out",
             f"--error=slurm_logs_ls/mlr_largescale_{job_id}_p{p}_n{n}_ncores{ncores}_mem{req_mb}.err",
-            "--partition=candes,candes,stat,hns,normal,bigmem",
+            "--partition=candes,stat,hns,normal,bigmem",
             "--time=24:00:00",
             f"--mem={req_mb}M",
             f"--cpus-per-task={ncores}",
             "largescale.sh",
-            f"--p {p}",
-            f"--n {n}",
-            f"--reps {REPS}",
-            f"--job_id {job_id}",
-            f"--seed_start {SEED_START}",
+            f"--p", str(p),
+            f"--n", str(n),
+            f"--reps", str(REPS),
+            f"--job_id", str(job_id),
+            f"--seed_start", str(SEED_START),
         ]
+        # error handling
         result = subprocess.run(sbatch_cmd, capture_output=True, text=True)
-        print(f"Submitted job with command {sbatch_cmd}: output={result.stdout.strip()}")
+        if result.returncode != 0:
+            print(f"Failed to submit job for p={p}, n={n}.")
+            print(f"Command: {' '.join(sbatch_cmd)}")
+            print(f"Return code: {result.returncode}")
+            print(f"Stdout: {result.stdout}")
+            print(f"Stderr: {result.stderr}")
+        else:
+            print(f"Submitted job with command {sbatch_cmd}: stdout={result.stdout.strip()}, stderr={result.stderr.strip()}.")
 
 if __name__ == "__main__":
     main()
