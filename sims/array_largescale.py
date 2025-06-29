@@ -26,12 +26,10 @@ def get_partitions(required_mb):
         partitions += ",bigmem"
     return partitions
 
-def num_cores(n, p):
-    return 1
-
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--test", type=int, default=1)
+    parser.add_argument("--ncores", type=int, default=1)
     args = parser.parse_args()
     test = args.test
     
@@ -65,17 +63,16 @@ def main():
             print(f"Memory requirement for n={n}, p={p} is {req_mb} MB, which is too large.")
             continue
         partitions = get_partitions(required_mb=req_mb)
-        ncores = num_cores(n, p)
         # submit job
         sbatch_cmd = [
             "sbatch",
             "--job-name=mlr_largescale",
-            f"--output=slurm_logs_ls/mlr_largescale_{job_id}_p{p}_n{n}_ncores{ncores}_mem{req_mb}.out",
-            f"--error=slurm_logs_ls/mlr_largescale_{job_id}_p{p}_n{n}_ncores{ncores}_mem{req_mb}.err",
+            f"--output=slurm_logs_ls/mlr_largescale_{job_id}_p{p}_n{n}_ncores{args.ncores}_mem{req_mb}.out",
+            f"--error=slurm_logs_ls/mlr_largescale_{job_id}_p{p}_n{n}_ncores{args.ncores}_mem{req_mb}.err",
             f"--partition={partitions}",
             "--time=24:00:00",
             f"--mem={req_mb}M",
-            f"--cpus-per-task={ncores}",
+            f"--cpus-per-task={args.ncores}",
             "largescale.sh",
             f"--p", str(p),
             f"--n", str(n),
