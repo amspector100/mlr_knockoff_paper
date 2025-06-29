@@ -17,9 +17,8 @@ from memory_profiler import profile
 
 ## imports for R
 import rpy2
-import rpy2.robjects.numpy2ri as numpy2ri
-import rpy2.robjects as ro
-from rpy2.rinterface_lib.embedded import RRuntimeError
+from rpy2.robjects.numpy2ri import numpy2rpy
+from rpy2.robjects.packages import importr
 
 MAX_ITER = 100
 # max n * p for lasso
@@ -75,15 +74,12 @@ def run_susie(
 	q,
 	**kwargs
 ):
-	ro.conversion.py2ri = numpy2ri
-	numpy2ri.activate()
-	from rpy2.robjects.packages import importr
+	# import
 	susieR = importr('susieR')
-	R_null = ro.rinterface.NULL
 	t0 = time.time()
 	# Run susie
-	susie_obj = susieR.susie(
-		X=X, y=y, L=L, coverage=1-q, **kwargs
+	susieR.susie(
+		X=numpy2rpy(X), y=numpy2rpy(y), L=L, coverage=1-q, **kwargs
 	)
 	return time.time() - t0
 
