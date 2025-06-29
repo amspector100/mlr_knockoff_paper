@@ -52,9 +52,7 @@ done
 echo "n=${n}, p=${p}, job_id=${job_id}, seed_start=${seed_start}, reps=${reps}"
 
 # Load any modules needed
-module load gcc/14.2.0
-module load openblas/0.3.28
-source /home/users/aspector/mlr/.venv/bin/activate
+source /home/users/aspector/mlr/setup_env.sh
 
 LARGESCALE_ARGS="
         --n ${n}
