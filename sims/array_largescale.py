@@ -13,6 +13,19 @@ def memory_requirement_mb(n, p):
     required_mb = max(int(1000 * required_gb), 4000)
     return required_mb
 
+def get_partitions(required_mb):
+    # truly huge jobs must go to bigmem
+    if required_mb > 1e6:
+        return "bigmem"
+    # otherwise we can use the following set of partitions
+    partitions = "candes"
+    if True:
+        partitions += ",stat,hns,normal"
+    # only very big mem --> bigmem
+    if required_mb > 256000:
+        partitions += ",bigmem"
+    return partitions
+
 def num_cores(n, p):
     return 1
 
@@ -51,6 +64,7 @@ def main():
         if req_mb > MAX_REQ_MB:
             print(f"Memory requirement for n={n}, p={p} is {req_mb} MB, which is too large.")
             continue
+        partitions = get_partitions(required_mb=req_mb)
         ncores = num_cores(n, p)
         # submit job
         sbatch_cmd = [
@@ -58,7 +72,7 @@ def main():
             "--job-name=mlr_largescale",
             f"--output=slurm_logs_ls/mlr_largescale_{job_id}_p{p}_n{n}_ncores{ncores}_mem{req_mb}.out",
             f"--error=slurm_logs_ls/mlr_largescale_{job_id}_p{p}_n{n}_ncores{ncores}_mem{req_mb}.err",
-            "--partition=candes,stat,hns,normal,bigmem",
+            f"--partition={partitions}",
             "--time=24:00:00",
             f"--mem={req_mb}M",
             f"--cpus-per-task={ncores}",
