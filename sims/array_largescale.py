@@ -5,8 +5,8 @@ import argparse
 
 MAX_REQ_MB = 1000000
 SEED_START = 1
-REPS = 1
-REPS_PER_JOB = 1
+REPS_PER_JOB = 2
+N_JOBS = 5
 
 def memory_requirement_mb(n, p):
     required_gb = 2 * n * p / (1e7)
@@ -64,32 +64,34 @@ def main():
             continue
         partitions = get_partitions(required_mb=req_mb)
         # submit job
-        sbatch_cmd = [
-            "sbatch",
-            "--job-name=mlr_largescale",
-            f"--output=slurm_logs_ls/mlr_largescale_{job_id}_p{p}_n{n}_ncores{args.ncores}_mem{req_mb}.out",
-            f"--error=slurm_logs_ls/mlr_largescale_{job_id}_p{p}_n{n}_ncores{args.ncores}_mem{req_mb}.err",
-            f"--partition={partitions}",
-            "--time=24:00:00",
-            f"--mem={req_mb}M",
-            f"--cpus-per-task={args.ncores}",
-            "largescale.sh",
-            f"--p", str(p),
-            f"--n", str(n),
-            f"--reps", str(REPS),
-            f"--job_id", str(job_id),
-            f"--seed_start", str(SEED_START),
-        ]
-        # error handling
-        result = subprocess.run(sbatch_cmd, capture_output=True, text=True)
-        if result.returncode != 0:
-            print(f"Failed to submit job for p={p}, n={n}.")
-            print(f"Command: {' '.join(sbatch_cmd)}")
-            print(f"Return code: {result.returncode}")
-            print(f"Stdout: {result.stdout}")
-            print(f"Stderr: {result.stderr}")
-        else:
-            print(f"Submitted job with command {sbatch_cmd}: stdout={result.stdout.strip()}, stderr={result.stderr.strip()}.")
+        for jobnum in range(N_JOBS):
+            seed_start = SEED_START + jobnum * REPS_PER_JOB
+            sbatch_cmd = [
+                "sbatch",
+                "--job-name=mlr_largescale",
+                f"--output=slurm_logs_ls/mlr_largescale_{job_id}_p{p}_n{n}_ncores{args.ncores}_mem{req_mb}_{seed_start}.out",
+                f"--error=slurm_logs_ls/mlr_largescale_{job_id}_p{p}_n{n}_ncores{args.ncores}_mem{req_mb}_{seed_start}.err",
+                f"--partition={partitions}",
+                "--time=24:00:00",
+                f"--mem={req_mb}M",
+                f"--cpus-per-task={args.ncores}",
+                "largescale.sh",
+                f"--p", str(p),
+                f"--n", str(n),
+                f"--reps", str(REPS_PER_JOB),
+                f"--job_id", str(job_id),
+                f"--seed_start", str(seed_start),
+            ]
+            # error handling
+            result = subprocess.run(sbatch_cmd, capture_output=True, text=True)
+            if result.returncode != 0:
+                print(f"Failed to submit job for p={p}, n={n}.")
+                print(f"Command: {' '.join(sbatch_cmd)}")
+                print(f"Return code: {result.returncode}")
+                print(f"Stdout: {result.stdout}")
+                print(f"Stderr: {result.stderr}")
+            else:
+                print(f"Submitted job with command {sbatch_cmd}: stdout={result.stdout.strip()}, stderr={result.stderr.strip()}.")
 
 if __name__ == "__main__":
     main()
