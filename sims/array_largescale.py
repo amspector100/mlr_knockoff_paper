@@ -18,12 +18,12 @@ def get_partitions(required_mb):
     if required_mb > 1e6:
         return "bigmem"
     # otherwise we can use the following set of partitions
-    partitions = "candes"
-    if True:
-        partitions += ",stat,hns,normal"
+    partitions = "candes,hns"
     # only very big mem --> bigmem
     if required_mb > 256000:
         partitions += ",bigmem"
+    else:
+        partitions += ",normal,stat"
     return partitions
 
 def main():

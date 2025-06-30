@@ -57,7 +57,8 @@ def suppress_warnings(func):
 
 def gen_data(n, p):
 	X = np.random.uniform(size=(n, p))
-	beta = np.random.randn(p) / np.sqrt(p)
+	beta = np.zeros(p)
+	beta[0:10] = 1
 	Xk = np.random.uniform(size=(n, p))
 	y = np.random.uniform(size=n) + X @ beta
 	return dict(
