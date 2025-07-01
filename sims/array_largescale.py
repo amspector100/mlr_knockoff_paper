@@ -102,7 +102,7 @@ def main():
                 f"--output=slurm_logs_ls/mlr_largescale_{job_id}_p{p}_n{n}_ncores{args.ncores}_mem{req_mb}_{seed_start}.out",
                 f"--error=slurm_logs_ls/mlr_largescale_{job_id}_p{p}_n{n}_ncores{args.ncores}_mem{req_mb}_{seed_start}.err",
                 f"--partition={partitions}",
-                "--time=24:00:00",
+                "--time=23:00:00",
                 f"--mem={req_mb}M",
                 f"--cpus-per-task={args.ncores}",
                 "largescale.sh",
