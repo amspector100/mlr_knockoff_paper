@@ -39,20 +39,47 @@ def main():
     
     if test == 1:
         p_n_combos = [
-            dict(p=50, n=20),
-            dict(p=20, n=200),
+            dict(p=50, n=20, compute_cv=True),
+            dict(p=20, n=200, compute_cv=True),
         ]
         print(f"Running in test mode.")
     elif test == 2:
         p_n_combos = [
-            dict(p=1000, n=5000),
+            dict(p=1000, n=5000, compute_cv=True),
         ]
         print("Running a real test.")
     else:
-        # note to self: we should submit jobs for p=40,000, n=40-380K since those failed
-        ps = [2500, 5000, 10000, 20000, 40000]
-        ns = [5000, 13000, 40000, 120000, 380000]
-        p_n_combos = [dict(p=p, n=n) for p in ps for n in ns]
+        panels = [
+            # panel 1
+            {
+                "n":5000,
+                "p":[2500, 5000, 10000, 20000, 40000, 60000, 100000],
+                "compute_cv":True,
+            },
+            # panel 2
+            {
+                "n":40000,
+                "p":[2500, 5000, 10000, 20000, 40000, 60000, 100000],
+                "compute_cv":False,
+            },
+            # panel 3
+            {
+                "n":120000,
+                "p":[2500, 5000, 10000, 20000, 40000, 60000],
+                "compute_cv":False,
+            },
+            # panel 4
+            {
+                "n":337000,
+                "p":[2500, 5000, 10000, 20000, 40000],
+                "compute_cv":False,
+            },
+        ]
+        p_n_combos = []
+        for panel in panels:
+            for p in panel['p']:
+                p_n_combos.append(dict(p=p, n=panel['n'], compute_cv=panel['compute_cv']))
+        print(p_n_combos)
         print(f"Not running test mode.")
 
     for p_n in p_n_combos:
@@ -82,6 +109,7 @@ def main():
                 f"--reps", str(REPS_PER_JOB),
                 f"--job_id", str(job_id),
                 f"--seed_start", str(seed_start),
+                f"--compute_cv", str(p_n['compute_cv']),
             ]
             # error handling
             result = subprocess.run(sbatch_cmd, capture_output=True, text=True)

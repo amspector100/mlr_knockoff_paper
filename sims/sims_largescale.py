@@ -40,9 +40,8 @@ from rpy2.robjects.packages import importr
 
 MAX_ITER = 100
 # max n * p for lasso
-MAX_NP_LASSO = 500000000
+MAX_NP_LASSO = np.inf
 MAX_NP_LASSO_CV = 100000000
-MAX_NP = int(500000 * 50000)
 
 # Specifies the type of simulation
 DIR_TYPE = os.path.split(os.path.abspath(__file__))[1].split(".py")[0]
@@ -56,11 +55,15 @@ def suppress_warnings(func):
 	return wrapper
 
 def gen_data(n, p):
+	if p < 100:
+		raise ValueError("p must be greater than 100 for this simulation.")
 	X = np.random.uniform(size=(n, p))
 	beta = np.zeros(p)
-	beta[0:10] = 1
+	beta[0:100] = 0.1
 	Xk = np.random.uniform(size=(n, p))
 	y = np.random.uniform(size=n) + X @ beta
+	y -= y.mean()
+	y /= y.std()
 	return dict(
 		X=X, Xk=Xk, y=y
 	)
@@ -68,7 +71,7 @@ def gen_data(n, p):
 @suppress_warnings
 def lasso_cv_time_fit(X, Xk, y, n_folds=3):
 	if MAX_NP_LASSO_CV < X.shape[0] * X.shape[1]:
-		return np.nan
+		print(f"WARNING: lasso CV will be very expensive with X.shape={X.shape}.")
 	features = np.concatenate([X, Xk], axis=1)
 	t0 = time.time()
 	lasso = LassoCV(cv=n_folds, copy_X=False, max_iter=MAX_ITER, n_alphas=10, n_jobs=-1)
@@ -79,7 +82,7 @@ def lasso_cv_time_fit(X, Xk, y, n_folds=3):
 @suppress_warnings
 def lasso_time_fit(X, Xk, y):
 	if MAX_NP_LASSO < X.shape[0] * X.shape[1]:
-		return np.nan
+		print(f"WARNING: lasso will be very expensive with X.shape={X.shape}.")
 	t0 = time.time()
 	lasso = Lasso(copy_X=False, max_iter=MAX_ITER)
 	lasso.fit(np.concatenate([X, Xk], axis=1), y)
@@ -126,6 +129,7 @@ def main():
 	maxp = max(ps)
 	ns = args.get('n', [4000])
 	maxn = max(ns)
+	compute_cv = args.get('compute_cv', [False])[0]
 
 	# Save args, create output dir
 	output_dir = utilities.create_output_directory(args, dir_type=DIR_TYPE)
@@ -145,8 +149,11 @@ def main():
 				print(f"{preamble}: sampling data took {elapsed(tdata)}, total_time={elapsed(t0)}.")
 				lasso_time = lasso_time_fit(**data)
 				print(f"{preamble}: lasso took {lasso_time}, total_time={elapsed(t0)}.")
-				lasso_cv_time = lasso_cv_time_fit(**data)
-				print(f"{preamble}: lasso cv took {lasso_cv_time}, total_time={elapsed(t0)}.")
+				if compute_cv:
+					lasso_cv_time = lasso_cv_time_fit(**data)
+					print(f"{preamble}: lasso cv took {lasso_cv_time}, total_time={elapsed(t0)}.")
+				else:
+					print(f"{preamble}: skipping lasso cv, too expensive.")
 				susie_time = run_susie(X=data['X'], y=data['y'], L=10, q=0.05)
 				print(f"{preamble}: susie took {susie_time}, total_time={elapsed(t0)}.")
 				mlr_time = compute_mlr_stats(data, n_iter=MAX_ITER, chains=1)
