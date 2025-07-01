@@ -49,6 +49,7 @@ def main():
         ]
         print("Running a real test.")
     else:
+        # note to self: we should submit jobs for p=40,000, n=40-380K since those failed
         ps = [2500, 5000, 10000, 20000, 40000]
         ns = [5000, 13000, 40000, 120000, 380000]
         p_n_combos = [dict(p=p, n=n) for p in ps for n in ns]

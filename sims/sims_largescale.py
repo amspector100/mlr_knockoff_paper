@@ -121,15 +121,21 @@ def main():
 	job_id = args.pop("job_id", [0])[0]
 	seeds = np.arange(seed_start, seed_start + reps)
 
+	# get params
+	ps = args.get('p', [10000])
+	maxp = max(ps)
+	ns = args.get('n', [4000])
+	maxn = max(ns)
+
 	# Save args, create output dir
 	output_dir = utilities.create_output_directory(args, dir_type=DIR_TYPE)
-	output_path = output_dir + f'jobid{job_id}_seedstart{seed_start}_results.csv'
-	
+	output_path = output_dir + f'jobid{job_id}_seedstart{seed_start}_p{maxp}_n{maxn}_results.csv'
+
 	# loop through and time
 	output = []
 	for seed in seeds:
-		for p in args.get('p', [10000]):
-			for n in args.get('n', [4000]):
+		for p in ps:
+			for n in ns:
 				if n * p > MAX_NP:
 					print(f"Skipping n={n}, p={p}, too expensive.")
 				np.random.seed(seed)
