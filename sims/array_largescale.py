@@ -3,13 +3,14 @@ from datetime import datetime
 import random
 import argparse
 
-MAX_REQ_MB = 1000000
+MAX_REQ_MB = 3e6
 SEED_START = 1
-REPS_PER_JOB = 2
-N_JOBS = 5
+REPS_PER_JOB = 4
+N_JOBS = 2
 
 def memory_requirement_mb(n, p):
-    required_gb = 2 * n * p / (1e7)
+    # required_bytes = 8 * n * p * 4 # 8 bytes per float, we store X, Xk twice (bc concat to features)
+    required_gb = 128 * n * p / 1e9 # reasonable approximation
     required_mb = max(int(1000 * required_gb), 4000)
     return required_mb
 
@@ -87,6 +88,7 @@ def main():
         n = p_n['n']
         # get memory requirement
         req_mb = memory_requirement_mb(n, p)
+        print(f"n={n}, p={p}, GB req={req_mb/1000}")
         if req_mb > MAX_REQ_MB:
             print(f"Memory requirement for n={n}, p={p} is {req_mb} MB, which is too large.")
             continue

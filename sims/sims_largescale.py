@@ -40,6 +40,7 @@ from rpy2.robjects.packages import importr
 
 MAX_ITER = 100
 # max n * p for lasso
+MAX_NP = np.inf
 MAX_NP_LASSO = np.inf
 MAX_NP_LASSO_CV = 100000000
 
@@ -55,11 +56,9 @@ def suppress_warnings(func):
 	return wrapper
 
 def gen_data(n, p):
-	if p < 100:
-		raise ValueError("p must be greater than 100 for this simulation.")
 	X = np.random.uniform(size=(n, p))
 	beta = np.zeros(p)
-	beta[0:100] = 0.1
+	beta[0:min(p, 100)] = 0.1
 	Xk = np.random.uniform(size=(n, p))
 	y = np.random.uniform(size=n) + X @ beta
 	y -= y.mean()
@@ -74,7 +73,7 @@ def lasso_cv_time_fit(X, Xk, y, n_folds=3):
 		print(f"WARNING: lasso CV will be very expensive with X.shape={X.shape}.")
 	features = np.concatenate([X, Xk], axis=1)
 	t0 = time.time()
-	lasso = LassoCV(cv=n_folds, copy_X=False, max_iter=MAX_ITER, n_alphas=10, n_jobs=-1)
+	lasso = LassoCV(cv=n_folds, copy_X=False, max_iter=MAX_ITER, n_alphas=10, n_jobs=1)
 	lasso.fit(features, y)
 	del features
 	return time.time() - t0
