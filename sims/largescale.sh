@@ -43,13 +43,21 @@ while [[ $# -gt 0 ]]; do
             reps="${1#*=}"
             shift
             ;;
+        --compute_cv)
+            compute_cv="$2"
+            shift 2
+            ;;
+        --compute_cv=*)
+            compute_cv="${1#*=}"
+            shift
+            ;;
         *)
             echo "Unknown argument: $1"
             exit 1
             ;;
     esac
 done
-echo "n=${n}, p=${p}, job_id=${job_id}, seed_start=${seed_start}, reps=${reps}"
+echo "n=${n}, p=${p}, job_id=${job_id}, seed_start=${seed_start}, reps=${reps}, compute_cv=${compute_cv}"
 
 # Load any modules needed
 source /home/users/aspector/mlr/setup_env.sh
@@ -60,6 +68,7 @@ LARGESCALE_ARGS="
         --job_id ${job_id}
         --reps ${reps}
         --seed_start ${seed_start}
+        --compute_cv ${compute_cv}
 "
 
 python sims_largescale.py $LARGESCALE_ARGS
