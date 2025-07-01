@@ -20,10 +20,7 @@ def get_partitions(required_mb):
         return "bigmem"
     # otherwise we can use the following set of partitions
     partitions = "candes,hns"
-    # only very big mem --> bigmem
-    if required_mb > 256000:
-        partitions += ",bigmem"
-    else:
+    if required_mb < 256000:
         partitions += ",normal,stat"
     return partitions
 
@@ -58,21 +55,23 @@ def main():
             #     "compute_cv":True,
             # },
             # panel 2
-            {
-                "n":40000,
-                "p":[2500, 5000, 10000, 20000, 40000, 60000, 100000],
-                "compute_cv":False,
-            },
+            # {
+            #     "n":40000,
+            #     "p":[2500, 5000, 10000, 20000, 40000, 60000, 100000],
+            #     "compute_cv":False,
+            # },
             # panel 3
             {
                 "n":120000,
-                "p":[2500, 5000, 10000, 20000, 40000, 60000],
+                #"p":[2500, 5000, 10000, 20000, 40000, 60000],
+                "p":[40000, 60000],
                 "compute_cv":False,
             },
             # panel 4
             {
                 "n":337000,
-                "p":[2500, 5000, 10000, 20000, 40000],
+                #"p":[2500, 5000, 10000, 20000, 40000],
+                "p":[10000, 20000, 40000],
                 "compute_cv":False,
             },
         ]
