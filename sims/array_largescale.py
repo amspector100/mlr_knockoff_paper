@@ -5,8 +5,8 @@ import argparse
 
 MAX_REQ_MB = 3e6
 SEED_START = 1
-REPS_PER_JOB = 4
-N_JOBS = 2
+REPS_PER_JOB = 3
+N_JOBS = 3
 
 def memory_requirement_mb(n, p):
     # required_bytes = 8 * n * p * 4 # 8 bytes per float, we store X, Xk twice (bc concat to features)
