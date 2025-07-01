@@ -152,6 +152,7 @@ def main():
 					lasso_cv_time = lasso_cv_time_fit(**data)
 					print(f"{preamble}: lasso cv took {lasso_cv_time}, total_time={elapsed(t0)}.")
 				else:
+					lasso_cv_time = np.nan
 					print(f"{preamble}: skipping lasso cv, too expensive.")
 				susie_time = run_susie(X=data['X'], y=data['y'], L=10, q=0.05)
 				print(f"{preamble}: susie took {susie_time}, total_time={elapsed(t0)}.")
