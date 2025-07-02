@@ -12,7 +12,7 @@ from scipy import stats
 from context import knockpy, mlr_src
 from mlr_src import gen_data, oracle, parser, utilities
 from mlr_src.utilities import elapsed
-from mlr_src.studentized import StudentizedLassoStatistic
+from mlr_src.studentized import StudentizedLassoStatistic, ElasticNetStatistic
 from knockpy import knockoffs
 from knockpy.knockoff_filter import KnockoffFilter as KF
 from knockpy import knockoff_stats as kstats
@@ -184,6 +184,8 @@ def single_seed_sim(
 								fstats.append(('lsm', 'lsm'))
 							if args.get("compute_studentized", [True])[0]:
 								fstats.append((StudentizedLassoStatistic(), 'lcd_studentized'))
+							if args.get("compute_elasticnet", [True])[0]:
+								fstats.append((ElasticNetStatistic(), 'lcd_elasticnet'))
 							# MLR statistics + bayesian baseline
 							if args.get('compute_mlr', [True])[0]:
 								fstats.append(('mlr', 'mlr'))

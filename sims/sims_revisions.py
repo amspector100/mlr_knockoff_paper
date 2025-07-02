@@ -11,7 +11,7 @@ import pandas as pd
 from context import knockpy, mlr_src
 from mlr_src import parser, utilities
 from mlr_src.utilities import elapsed
-from mlr_src.studentized import StudentizedLassoStatistic
+from mlr_src.studentized import StudentizedLassoStatistic, ElasticNetStatistic
 from knockpy import knockoffs
 from knockpy.knockoff_filter import KnockoffFilter as KF
 from knockpy import knockoff_stats as kstats
@@ -111,6 +111,9 @@ def single_seed_sim(
             fstat_kwargs.append({})      
         if args.get("run_studentized", True):
             fstats.append(("lcd_studentized", StudentizedLassoStatistic()))
+            fstat_kwargs.append({})
+        if args.get("run_elasticnet", True):
+            fstats.append(("elasticnet", ElasticNetStatistic()))
             fstat_kwargs.append({})
         for (fstat_name, fstat), fkwargs in zip(fstats, fstat_kwargs):
             time0 = time.time()

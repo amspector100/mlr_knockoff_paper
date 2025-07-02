@@ -1,7 +1,43 @@
 import numpy as np
 import knockpy
-from knockpy.knockoff_stats import LassoStatistic, combine_Z_stats
+from knockpy.knockoff_stats import FeatureStatistic, LassoStatistic, combine_Z_stats
 import warnings
+import sklearn.linear_model
+
+class ElasticNetStatistic(FeatureStatistic):
+
+    def fit(self, X, Xk, y, groups, **kwargs):
+        # initialize feature statistics
+        n, p = X.shape
+        if groups is None:
+            groups = np.arange(1, p+1, 1)
+        
+        # Step 0: concatenate and get features
+        features = np.concatenate([X, Xk], axis=1)
+        inds, rev_inds = knockpy.utilities.random_permutation_inds(2 * p)
+        features = features[:, inds]
+
+
+        # Step 1: fit elasticnet
+        with warnings.catch_warnings():
+            warnings.filterwarnings('ignore', category=UserWarning)
+            self.model = sklearn.linear_model.ElasticNetCV(
+                # l1_ratio=kwargs.get('l1_ratio', 0.9),
+                alphas=10,
+                cv=5,
+            )
+            self.model.fit(features, y)
+
+        # Step 2: retrieve coefs
+        Z = self.model.coef_
+        self.Z = Z[rev_inds]
+        self.W = combine_Z_stats(
+            self.Z,
+            groups=groups,
+            antisym=kwargs.get('antisym', 'cd'),
+            group_agg=kwargs.get('group_agg', 'sum'),
+        )
+        return self.W
 
 class StudentizedLassoStatistic(LassoStatistic):
 
@@ -61,4 +97,16 @@ if __name__ == "__main__":
     print("Studentized:")
     print(kfilter.fstat.W)
     print("rejections:", kfilter.make_selections(kfilter.fstat.W, 0.1).sum())
+    kfe = knockpy.knockoff_filter.KnockoffFilter(
+        fstat=ElasticNetStatistic(),
+        ksampler='gaussian',
+    )
+    kfe.forward(
+        X=dgp.X,
+        y=dgp.y,
+        Sigma=dgp.Sigma,
+    )
+    print("ElasticNet:")
+    print(kfe.fstat.W)
+    print("rejections:", kfe.make_selections(kfe.fstat.W, 0.1).sum())
     print("Success!")
