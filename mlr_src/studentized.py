@@ -1,6 +1,6 @@
 import numpy as np
 import knockpy
-from knockpy.knockoff_stats import FeatureStatistic, LassoStatistic, combine_Z_stats
+from knockpy.knockoff_stats import FeatureStatistic, LassoStatistic, combine_Z_stats, default_regularization
 import warnings
 import sklearn.linear_model
 
@@ -31,7 +31,10 @@ class ElasticNetStatistic(FeatureStatistic):
                     cv=5,
                 )
             else:
-                self.model = sklearn.linear_model.ElasticNet()
+                # can't use CV, use heuristic from https://arxiv.org/pdf/1508.02757
+                alpha = default_regularization(X, Xk, y)
+                self.model = sklearn.linear_model.ElasticNet(alpha=alpha)
+                
             self.model.fit(features, y)
 
         # Step 2: retrieve coefs
