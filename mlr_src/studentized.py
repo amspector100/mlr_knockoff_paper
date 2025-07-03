@@ -6,6 +6,10 @@ import sklearn.linear_model
 
 class ElasticNetStatistic(FeatureStatistic):
 
+    def __init__(self, mx: bool, **kwargs):
+        super().__init__(**kwargs)
+        self.mx = mx
+
     def fit(self, X, Xk, y, groups, **kwargs):
         # initialize feature statistics
         n, p = X.shape
@@ -21,11 +25,13 @@ class ElasticNetStatistic(FeatureStatistic):
         # Step 1: fit elasticnet
         with warnings.catch_warnings():
             warnings.filterwarnings('ignore', category=UserWarning)
-            self.model = sklearn.linear_model.ElasticNetCV(
-                # l1_ratio=kwargs.get('l1_ratio', 0.9),
-                alphas=10,
-                cv=5,
-            )
+            if self.mx:
+                self.model = sklearn.linear_model.ElasticNetCV(
+                    alphas=10,
+                    cv=5,
+                )
+            else:
+                self.model = sklearn.linear_model.ElasticNet()
             self.model.fit(features, y)
 
         # Step 2: retrieve coefs

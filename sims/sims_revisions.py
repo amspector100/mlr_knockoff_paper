@@ -113,7 +113,7 @@ def single_seed_sim(
             fstats.append(("lcd_studentized", StudentizedLassoStatistic()))
             fstat_kwargs.append({})
         if args.get("run_elasticnet", True):
-            fstats.append(("elasticnet", ElasticNetStatistic()))
+            fstats.append(("elasticnet", ElasticNetStatistic(mx=True)))
             fstat_kwargs.append({})
         for (fstat_name, fstat), fkwargs in zip(fstats, fstat_kwargs):
             time0 = time.time()

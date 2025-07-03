@@ -185,7 +185,7 @@ def single_seed_sim(
 							if args.get("compute_studentized", [True])[0]:
 								fstats.append((StudentizedLassoStatistic(), 'lcd_studentized'))
 							if args.get("compute_elasticnet", [True])[0]:
-								fstats.append((ElasticNetStatistic(), 'lcd_elasticnet'))
+								fstats.append((ElasticNetStatistic(mx=mx), 'lcd_elasticnet'))
 							# MLR statistics + bayesian baseline
 							if args.get('compute_mlr', [True])[0]:
 								fstats.append(('mlr', 'mlr'))
