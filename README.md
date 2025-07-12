@@ -6,7 +6,13 @@ This repository contains all the code to replicate the experiments and real data
 
 The directory ``mlr_src`` contains extraneous functions used in the simulations. However, the core contribution of the paper (MLR statistics) is implemented and published in the ``knockpy`` package to ease installation. 
 
-The directory ``sims`` contains the code which actually runs the simulations. It also contains a ``all_sims.sh`` files which will replicate the exact simulation settings in the paper. The exception is that the data for a few plots was simulated directly in the ``final-plots/final_plots.ipynb`` notebook.
+The directory ``sims`` contains the code which actually runs the simulations. It contains three files:
+- ``array_all_main_sims.sh``
+- ``array_largescale.py``
+- ``array_groupknock.sh``
+- ``array_robustness.sh`` 
+
+which will replicate the exact simulation settings in the paper. The exception is that the data for a few plots was simulated directly in the ``final-plots/final_plots.ipynb`` notebook.
 
 The code needed to replicate the three real data applications are in the ``real_data/`` subdirectory. 
 
@@ -26,3 +32,5 @@ In general, all ``.py`` and ``.sh`` files should be called from the directory in
 10. Figure 10: generated from ``real_data/nodewise_knock.py``.
 11. Figure 11: generated using ``sims/all_sims.sh`` using ``NONLIN_ARGS``.
 12. Figures 12-15: generated using ``real_data/hiv_data.py`` and ``final-plots/final_plots.ipynb``. 
+
+Note: this uses the old arXiv versioning, will be updated for the revised paper when it's posted.
