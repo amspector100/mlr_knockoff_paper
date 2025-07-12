@@ -1,6 +1,6 @@
 # MLR Paper
 
-This repository contains all the code to replicate the experiments and real data analyses from Spector and Fithian (2022). Running these scripts requires a python environment with ``knockpy`` installed (version 1.3+): see https://github.com/amspector100/knockpy for installation.
+This repository contains all the code to replicate the experiments and real data analyses from Spector and Fithian (2022). Running these scripts requires a python environment with ``knockpy`` installed (version 1.3.5+): see https://github.com/amspector100/knockpy for installation.
 
 ## Overview
 
