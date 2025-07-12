@@ -8,12 +8,15 @@ import time
 
 import numpy as np
 import pandas as pd
+from scipy import stats
 from context import knockpy, mlr_src
 from mlr_src import gen_data, oracle, parser, utilities
 from mlr_src.utilities import elapsed
+from mlr_src.studentized import StudentizedLassoStatistic, ElasticNetStatistic
 from knockpy import knockoffs
 from knockpy.knockoff_filter import KnockoffFilter as KF
 from knockpy import knockoff_stats as kstats
+import warnings
 
 # bayes coeff diff, requires pyblip
 try:
@@ -47,6 +50,23 @@ columns = [
 	"ko_time",
 ]
 
+def get_covmethod_sample_kwargs(covmethod, args):
+	max_corr = args.get('max_corr', [0.99])
+	if isinstance(max_corr, list):
+		max_corr = max_corr[0]
+	sample_kwargs = {}
+	if covmethod in ['ver', 'ar1']:
+		sample_kwargs['max_corr'] = max_corr
+	if covmethod == 'ar1':
+		sample_kwargs['a'] = args.get("a", [5])[0]
+		sample_kwargs['b'] = args.get("b", [1])[0]
+	if covmethod == 'blockequi':
+		sample_kwargs['rho'] = args.get("rho", [0.5])[0]
+		sample_kwargs['gamma'] = args.get("gamma", [0])[0]
+	if covmethod == 'ver':
+		sample_kwargs['delta'] = args.get("delta", [0.2])[0]
+	return sample_kwargs, max_corr
+
 def single_seed_sim(
 	seed,
 	n,
@@ -57,25 +77,18 @@ def single_seed_sim(
 	args
 ):
 	print(f"At seed={seed}, n={n}, p={p}.")
-	sys.stdout.flush()
+	try:
+		sys.stdout.flush()
+	except OSError:
+		# Ignore stale file handle errors in cluster environments
+		pass
 
 	# 1. Create data-generating process for X
 	output = []
 	np.random.seed(seed)
 	dgprocess = knockpy.dgp.DGP()
-	max_corr = args.get('max_corr', [0.99])[0]
+	sample_kwargs, max_corr = get_covmethod_sample_kwargs(covmethod, args)
 	if covmethod not in ['orthogonal', 'ark']:
-		sample_kwargs = {}
-		if covmethod in ['ver', 'ar1']:
-			sample_kwargs['max_corr'] = max_corr
-		if covmethod == 'ar1':
-			sample_kwargs['a'] = args.get("a", [5])[0]
-			sample_kwargs['b'] = args.get("b", [1])[0]
-		if covmethod == 'blockequi':
-			sample_kwargs['rho'] = args.get("rho", [0.5])[0]
-			sample_kwargs['gamma'] = args.get("gamma", [0])[0]
-		if covmethod == 'ver':
-			sample_kwargs['delta'] = args.get("delta", [0.2])[0]
 		dgprocess.sample_data(
 			n=n,
 			p=p,
@@ -111,7 +124,11 @@ def single_seed_sim(
 		Xk = ksampler.sample_knockoffs()
 		ko_time = np.around(time.time() - time0, 2)
 		print(f"Finished sampling {S_method} knockoffs for seed={seed}, took {ko_time} at {elapsed(t0)}.")
-		sys.stdout.flush()
+		try:
+			sys.stdout.flush()
+		except OSError:
+			# Ignore stale file handle errors in cluster environments
+			pass
 
 		# 3. Generate y
 		for sparse in args.get('sparsity', [0.1]):
@@ -165,6 +182,10 @@ def single_seed_sim(
 								fstats.append(('lcd', 'lcd'))
 							if args.get('compute_lsm', [True])[0]:
 								fstats.append(('lsm', 'lsm'))
+							if args.get("compute_studentized", [True])[0]:
+								fstats.append((StudentizedLassoStatistic(), 'lcd_studentized'))
+							if args.get("compute_elasticnet", [True])[0]:
+								fstats.append((ElasticNetStatistic(mx=mx), 'lcd_elasticnet'))
 							# MLR statistics + bayesian baseline
 							if args.get('compute_mlr', [True])[0]:
 								fstats.append(('mlr', 'mlr'))
@@ -204,33 +225,46 @@ def single_seed_sim(
 								fstat_time = time.time() - time0
 
 								for q in args.get("q", [0.05, 0.10, 0.15, 0.20]):
-									T = kstats.data_dependent_threshhold(W=kf.W, fdr=q)
-									rej = (kf.W >= T).astype("float32")
-									power, fdp = utilities.calc_power_fdr(
-										rej,
-										beta,
-									)
+									# Possibly compute MLR and AMLR statistics.
+									# This is done this way to save time but this logic
+									# does not affect the other statistics
+									Ws = [kf.W]
+									fnames = [fstatname]
+									if fstatname == 'mlr':
+										# hack to compute AMLR statistics at this FDR level
+										kf.fstat.adjusted_mlr = True
+										kf.fstat.fdr = q
+										Ws.append(kf.fstat.compute_W())
+										fnames.append("amlr")
 
-									# Add output
-									output.append([
-										n,
-										p,
-										covmethod,
-										sparse,
-										coeff_size,
-										coeff_dist,
-										seed,
-										cond_mean,
-										y_dist,
-										mx,
-										S_method,
-										fstatname,
-										q,
-										power,
-										fdp,
-										fstat_time,
-										ko_time
-									])
+									for W, fname in zip(Ws, fnames):
+										T = kstats.data_dependent_threshhold(W=W, fdr=q)
+										rej = (W >= T).astype("float32")
+										power, fdp = utilities.calc_power_fdr(
+											rej,
+											beta,
+										)
+
+										# Add output
+										output.append([
+											n,
+											p,
+											covmethod,
+											sparse,
+											coeff_size,
+											coeff_dist,
+											seed,
+											cond_mean,
+											y_dist,
+											mx,
+											S_method,
+											fname,
+											q,
+											power,
+											fdp,
+											fstat_time,
+											ko_time
+										])
 	return output
 
 
@@ -248,10 +282,11 @@ def main(args):
 	ps = args.get('p', [300]) # dimensionality
 	kappas = args.get('kappa', [2.1, 3, 4]) # ratio of n/p
 	covmethods = args.get('covmethod', ['AR1']) # cov matrix
+	job_id = args.get('job_id', [0])[0]
 
 	# Save args, create output dir
 	output_dir = utilities.create_output_directory(args, dir_type=DIR_TYPE)
-	output_path = output_dir + 'results.csv'
+	output_path = output_dir + f'job_id{job_id}_seedstart{seed_start}_results.csv'
 	summary_path = output_dir + 'summary.csv'
 
 	# Run and save output
@@ -290,7 +325,7 @@ def main(args):
 					).reset_index()
 					summary.to_csv(summary_path, index=False)
 					pd.set_option('display.max_rows', 500)
-					#pd.set_option('display.max_columns', 10)
+					pd.set_option('display.max_columns', 20)
 					print(summary)
 					pd.reset_option('display.max_rows|display.max_columns|display.width')
 

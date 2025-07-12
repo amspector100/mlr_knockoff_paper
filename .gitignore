@@ -5,6 +5,7 @@ data/*
 prof/*
 proftest/*
 profile
+sims/slurm_logs/
 
 # misc data that will clog up the repo
 sims/hparams.py
